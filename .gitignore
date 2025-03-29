@@ -1,0 +1,29 @@
+# os
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# go
+/bin/
+/pkg/
+
+# workspace
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.iml
+
+# logs
+*.log
+*.out
+
+# misc
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# bin
+bangumi-cli.exe
+bangumi-cli
