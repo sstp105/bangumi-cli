@@ -36,7 +36,7 @@ Move the binary to a directory included in your system's environment variable pa
 
 ```sh
 # windows
-mv .\bangumi-cli.exe C:\Users\<usrname>\go\bin
+mv .\bangumi-cli.exe C:\Users\<usrname>\go\bin -Force
 
 # linux
 mv bangumi-cli /usr/local/go/bin

@@ -2,6 +2,7 @@ package bangumi
 
 import (
 	"fmt"
+	"time"
 )
 
 // UserSubjectCollectionResponse represents the response for fetching user subject collections.
@@ -52,4 +53,29 @@ type ErrorResponse struct {
 // Error implements the error interface for ErrorResponse.
 func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("bangumi api error: %s - %s: %s", e.Title, e.Description, e.Details)
+}
+
+type OAuthCredential struct {
+	AccessToken string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn int64 `json:"expires_in"`
+	TokenType string `json:"token_type"`
+	ExpiresUntil time.Time `json:"expires_until,omitempty"`
+}
+
+func (o *OAuthCredential) setExpiresUntil() {
+	o.ExpiresUntil = time.Now().Add(time.Second * time.Duration(o.ExpiresIn))
+}
+
+func (o *OAuthCredential) IsValid() bool {
+	return time.Now().Before(o.ExpiresUntil)
+}
+
+type OAuthErrorResponse struct {
+	ErrorCode string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+}
+
+func (o *OAuthErrorResponse) Error() string {
+	return fmt.Sprintf("bangumi oauth api error: %s - %s", o.ErrorCode, o.ErrorDescription)
 }
