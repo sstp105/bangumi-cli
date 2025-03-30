@@ -3,6 +3,8 @@ package bangumi
 import (
 	"fmt"
 	"time"
+
+	"github.com/sstp105/bangumi-cli/internal/utils"
 )
 
 // UserSubjectCollectionResponse represents the response for fetching user subject collections.
@@ -77,6 +79,17 @@ func (o *OAuthCredential) ShouldRefresh() bool {
 
 func (o *OAuthCredential) IsExpired() bool {
 	return o.ExpiresUntil.Before(time.Now())
+}
+
+func (o *OAuthCredential) Print() error {
+	data, err := utils.MarshalJSONIndented(o)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(data))
+
+	return nil
 }
 
 type OAuthErrorResponse struct {

@@ -67,6 +67,7 @@ func (m MacOSConfig) ConfigPath() ([]string, error) {
 // Parameters:
 //   - fn: The file name (e.g., "setting.json").
 //   - v: The value to be saved to the file. It will be marshaled into JSON format.
+//
 // Returns:
 //   - error: If any error occurs during the process, an error is returned.
 func SaveJSONConfigFile(fn string, v any) error {
