@@ -18,6 +18,7 @@ func main() {
 		log.Fatalf("error loading .env file:%s", err)
 	}
 
+	// TODO: config validation check
 	config.Load()
 
 	cmd.Execute()

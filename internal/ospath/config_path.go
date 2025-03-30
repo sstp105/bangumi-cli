@@ -11,14 +11,13 @@ import (
 )
 
 const (
-	AppDir                = "bangumi-cli"
+	AppDir = "bangumi-cli"
 
 	BangumiCredentialFile = "bangumi_creds.json"
 )
 
 var (
-	ErrUnsupportedOS                = errors.New("unsupported os")
-	ErrWindowsAppDataEnvNotFound    = errors.New("APPDATA env is not found")
+	ErrWindowsAppDataEnvNotFound = errors.New("APPDATA env is not found")
 )
 
 var osConfigProviders = map[string]ConfigPathProvider{
@@ -76,7 +75,7 @@ func SaveJSONConfigFile(fn string, v any) error {
 		return err
 	}
 
-	data, err := json.MarshalIndent(v, "", "  ")
+	data, err := utils.MarshalJSONIndented(v)
 	if err != nil {
 		return err
 	}
@@ -84,10 +83,29 @@ func SaveJSONConfigFile(fn string, v any) error {
 	return os.WriteFile(path, data, 0600) // owner r&w
 }
 
+func ReadJSONConfigFile(fn string, v any) error {
+	path, err := configPath(fn)
+	if err != nil {
+		return err
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(data, v)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func configPath(fn string) (string, error) {
 	provider, supported := osConfigProviders[runtime.GOOS]
 	if !supported {
-		return "", ErrUnsupportedOS
+		return "", utils.ErrUnsupportedOS
 	}
 
 	path, err := provider.ConfigPath()
@@ -96,7 +114,7 @@ func configPath(fn string) (string, error) {
 	}
 
 	dir := filepath.Join(path...)
-	if err := os.MkdirAll(dir, 0700); err != nil { // owner r&w&e
+	if err := os.MkdirAll(dir, 0700); err != nil { // create the config folder if does not exist
 		return "", err
 	}
 

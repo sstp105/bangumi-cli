@@ -1,17 +1,36 @@
 package config
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
-type Config struct {
-	Port                string
-	BangumiClientID     string
-	BangumiClientSecret string
+type config struct {
+	port                string
+	bangumiClientID     string
+	bangumiClientSecret string
 }
 
-var AppConfig Config
+var cfg config
 
 func Load() {
-	AppConfig.Port = os.Getenv("LOCAL_SERVER_PORT")
-	AppConfig.BangumiClientID = os.Getenv("BANGUMI_CLIENT_ID")
-	AppConfig.BangumiClientSecret = os.Getenv("BANGUMI_CLIENT_SECRET")
+	cfg.port = os.Getenv("LOCAL_SERVER_PORT")
+	cfg.bangumiClientID = os.Getenv("BANGUMI_CLIENT_ID")
+	cfg.bangumiClientSecret = os.Getenv("BANGUMI_CLIENT_SECRET")
+}
+
+func BangumiClientID() string {
+	return cfg.bangumiClientID
+}
+
+func BangumiClientSecret() string {
+	return cfg.bangumiClientSecret
+}
+
+func Port() string {
+	return cfg.port
+}
+
+func LocalServerAddress() string {
+	return fmt.Sprintf("http://localhost:%s", cfg.port)
 }

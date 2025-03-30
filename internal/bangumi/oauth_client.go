@@ -24,7 +24,7 @@ func NewOAuthClient() *OAuthClient {
 	}
 }
 
-func (o *OAuthClient) GetAccessToken(clientID, clientSecret, code, redirectURI string) (*OAuthCredential, error) {
+func (o *OAuthClient) GetAccessToken(clientID, clientSecret, redirectURI, code string) (*OAuthCredential, error) {
 	creds := OAuthCredential{}
 	errorResp := OAuthErrorResponse{}
 
@@ -32,7 +32,40 @@ func (o *OAuthClient) GetAccessToken(clientID, clientSecret, code, redirectURI s
 		"grant_type":    "authorization_code",
 		"client_id":     clientID,
 		"client_secret": clientSecret,
-		"code": code,
+		"code":          code,
+		"redirect_uri":  redirectURI,
+	}
+	url := postAccessTokenURL()
+
+	resp, err := o.client.R().
+		SetHeader("Content-Type", "application/x-www-form-urlencoded").
+		SetFormData(data).
+		SetResult(&creds).
+		SetError(&errorResp).
+		Post(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.IsError() {
+		return nil, &errorResp
+	}
+
+	creds.setExpiresUntil()
+
+	return &creds, nil
+}
+
+func (o *OAuthClient) RefreshAccessToken(clientID, clientSecret, redirectURI, refreshToken string) (*OAuthCredential, error) {
+	creds := OAuthCredential{}
+	errorResp := OAuthErrorResponse{}
+
+	data := map[string]string{
+		"grant_type":    "refresh_token",
+		"client_id":     clientID,
+		"client_secret": clientSecret,
+		"refresh_token": refreshToken,
 		"redirect_uri":  redirectURI,
 	}
 	url := postAccessTokenURL()

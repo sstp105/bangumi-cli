@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -38,4 +39,12 @@ func FindFiles(dir string, formats []string) ([]string, error) {
 	}
 
 	return nil, fmt.Errorf("no files found with formats %v", formats)
+}
+
+func MarshalJSONIndented(v any) ([]byte, error) {
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

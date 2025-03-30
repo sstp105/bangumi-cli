@@ -2,21 +2,21 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"os/signal"
-	"runtime"
 
 	"github.com/spf13/cobra"
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/config"
+	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/ospath"
+	"github.com/sstp105/bangumi-cli/internal/utils"
 )
 
 var authCmd = &cobra.Command{
-	Use:   "auth",
+	Use: "auth",
+	Short: "Authenticate user and obtain banggumi API access token.",
 	Run: func(cmd *cobra.Command, args []string) {
 		authHandler()
 	},
@@ -26,43 +26,105 @@ func init() {
 	rootCmd.AddCommand(authCmd)
 }
 
-var stop = make(chan os.Signal, 1)
+var creds *bangumi.OAuthCredential
+var credsNew *bangumi.OAuthCredential
+var ch = make(chan os.Signal, 1)
 
 func authHandler() {
-	clientID := config.AppConfig.BangumiClientID
-	clientSecret := config.AppConfig.BangumiClientSecret
-	port := config.AppConfig.Port
-	redirectURI := "http://localhost:8765" 
-	authURL := fmt.Sprintf("https://bgm.tv/oauth/authorize?client_id=%s&response_type=code&redirect_uri=%s", clientID, redirectURI)
+	if err := authenticate(); err != nil {
+		log.Fatalf("error authenticating user:%s", err)
+	}
+}
 
-	fmt.Println(clientID, clientSecret, port)
+func authenticate() error {
+	var err error
 
-	fmt.Println("Opening URL in the browser for bangumi.tv authentication...")
-	if err := openBrowser(authURL); err != nil {
-		log.Fatalf("failed to open URL in browser:%s\n", err)
+	err = ospath.ReadJSONConfigFile(ospath.BangumiCredentialFile, &creds)
+
+	switch {
+	case err != nil && os.IsNotExist(err):
+		err = oauth()
+	case err != nil:
+		return err
+	case creds.IsExpired():
+		err = oauth()
+	case creds.ShouldRefresh():
+		err = refreshCreds()
 	}
 
-	signal.Notify(stop, os.Interrupt)
+	if err != nil {
+		return err
+	}
+
+	if credsNew != nil {		
+		if err := ospath.SaveJSONConfigFile(ospath.BangumiCredentialFile, credsNew); err != nil {
+			log.Fatalf("error saving bangumi credentials:%s", err)
+		}
+		creds = credsNew
+	}
+
+	return printCreds(creds)
+}
+
+func printCreds(creds *bangumi.OAuthCredential) error {
+	data, err := utils.MarshalJSONIndented(creds)
+	if err != nil {
+		return err
+	}
+
+	log.Infof("%s", string(data))
+	
+	return nil
+}
+
+func oauth() error {
+	log.Info("Opening URL in the browser for bangumi.tv authentication...")
+
+	clientID := config.BangumiClientID()
+	url := fmt.Sprintf("https://bgm.tv/oauth/authorize?client_id=%s&response_type=code&redirect_uri=%s", clientID, config.LocalServerAddress())
+
+	if err := utils.OpenBrowser(url); err != nil {
+		return err
+	}
+
+	signal.Notify(ch, os.Interrupt)
 	go func() {
 		serve()
 	}()
-	<-stop 
+	<-ch
 
-	fmt.Println("Callback processed, shutting down the server...")
+	return nil
+}
+
+func refreshCreds() error {
+	var err error
+
+	client := bangumi.NewOAuthClient()
+	credsNew, err = client.RefreshAccessToken(
+		config.BangumiClientID(),
+		config.BangumiClientSecret(),
+		config.LocalServerAddress(),
+		creds.RefreshToken,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func serve() {
 	http.HandleFunc("/", listenCallback)
 
-	port := config.AppConfig.Port
+	port := config.Port()
 	addr := ":" + port
-	fmt.Printf("Listening for callback at localhost%s\n", addr)
+	log.Debugf("Listening for callback at localhost%s", addr)
 
 	server := &http.Server{
 		Addr: addr,
 	}
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("Error starting the HTTP server: %s", err)
+		log.Fatalf("error starting the HTTP server locally: %s", err)
 	}
 }
 
@@ -74,46 +136,21 @@ func listenCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("Authorization code received: %s\n", code)
+	log.Debugf("Authorization code received from the callback: %s", code)
 
+	var err error
 	client := bangumi.NewOAuthClient()
-	redirectURI := fmt.Sprintf("http://localhost:%s", config.AppConfig.Port)
-	creds, err := client.GetAccessToken(
-		config.AppConfig.BangumiClientID,
-		config.AppConfig.BangumiClientSecret,
+	credsNew, err = client.GetAccessToken(
+		config.BangumiClientID(),
+		config.BangumiClientSecret(),
+		config.LocalServerAddress(),
 		code,
-		redirectURI,
 	)
 	if err != nil {
-		fmt.Printf("error:%s", err)
-		http.Error(w, "Failed to request access token", http.StatusInternalServerError)
-	}
-
-	// save the creds locally
-	if err := ospath.SaveJSONConfigFile(ospath.BangumiCredentialFile, creds); err != nil {
-		fmt.Printf("error saving cred file:%s", err)
+		log.Fatalf("error requesting bangumi access_token:%s", err)
 	}
 
 	w.Write([]byte("You have successfully authenticated. You can close this window now."))
 
-	stop <- os.Interrupt
-}
-
-var osURLCommands = map[string][]string{
-	"linux":   {"xdg-open"},
-	"windows": {"rundll32", "url.dll,FileProtocolHandler"},
-	"darwin":   {"open"},
-}
-
-func openBrowser(url string) error {
-	goos := runtime.GOOS
-	v, exist := osURLCommands[goos]
-	if !exist {
-		return fmt.Errorf("unsupported os platform %s", goos)
-	}
-
-	command := v[0]
-	args := append(v[1:], url)
-
-	return exec.Command(command, args...).Start()
+	ch <- os.Interrupt
 }

@@ -72,4 +72,3 @@ func createFolder(folderName string) error {
 	}
 	return nil
 }
-

@@ -56,11 +56,11 @@ func (e *ErrorResponse) Error() string {
 }
 
 type OAuthCredential struct {
-	AccessToken string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn int64 `json:"expires_in"`
-	TokenType string `json:"token_type"`
-	ExpiresUntil time.Time `json:"expires_until,omitempty"`
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
+	ExpiresIn    int64     `json:"expires_in"`
+	TokenType    string    `json:"token_type"`
+	ExpiresUntil time.Time `json:"expires_until,omitempty"` // custom injected field
 }
 
 func (o *OAuthCredential) setExpiresUntil() {
@@ -71,8 +71,16 @@ func (o *OAuthCredential) IsValid() bool {
 	return time.Now().Before(o.ExpiresUntil)
 }
 
+func (o *OAuthCredential) ShouldRefresh() bool {
+	return o.ExpiresUntil.Before(time.Now().Add(24 * time.Hour))
+}
+
+func (o *OAuthCredential) IsExpired() bool {
+	return o.ExpiresUntil.Before(time.Now())
+}
+
 type OAuthErrorResponse struct {
-	ErrorCode string `json:"error"`
+	ErrorCode        string `json:"error"`
 	ErrorDescription string `json:"error_description"`
 }
 

@@ -14,9 +14,9 @@ func TestFormatFiles(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name:    "Test formatting multiple files",
-			files:   []string{"青之箱 (1).mp4", "青之箱 (2).mp4", "青之箱 (3).mp4"},
-			dir:     "/青之箱",
+			name:  "Test formatting multiple files",
+			files: []string{"青之箱 (1).mp4", "青之箱 (2).mp4", "青之箱 (3).mp4"},
+			dir:   "/青之箱",
 			expected: []string{
 				"/青之箱/青之箱 - S01E01.mp4",
 				"/青之箱/青之箱 - S01E02.mp4",
@@ -36,12 +36,12 @@ func TestFormatFiles(t *testing.T) {
 			for i, v := range got {
 				got[i] = filepath.ToSlash(v)
 			}
-			
+
 			expected := tt.expected
 			for i, v := range tt.expected {
 				expected[i] = filepath.ToSlash(v)
 			}
-	
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FormatFiles() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -53,7 +53,6 @@ func TestFormatFiles(t *testing.T) {
 		})
 	}
 }
-
 
 // Test case for the FormatFileName method
 func TestFormatFileName(t *testing.T) {
@@ -70,12 +69,11 @@ func TestFormatFileName(t *testing.T) {
 			f:    "[Aharen-san wa Hakarenai][02][BDRip 1080p AVC AAC][CHS].mkv",
 			dir:  "/tv_shows",
 			metadata: TVShowMetadata{
-				Title:   strPtr("测不准的阿波连同学"),
-				Season:  intPtr(1),
-				Episode: intPtr(2),
-				Year: strPtr("2022"),
+				Title:        strPtr("测不准的阿波连同学"),
+				Season:       intPtr(1),
+				Episode:      intPtr(2),
+				Year:         strPtr("2022"),
 				EpisodeTitle: strPtr("我是被跟踪了吧？"),
-
 			},
 			expected: "/tv_shows/测不准的阿波连同学 (2022) - S01E02 - 我是被跟踪了吧？.mkv",
 			wantErr:  false,
@@ -88,7 +86,7 @@ func TestFormatFileName(t *testing.T) {
 				Title:   strPtr("测不准的阿波连同学"),
 				Season:  intPtr(1),
 				Episode: intPtr(2),
-				Year: strPtr("2022"),
+				Year:    strPtr("2022"),
 			},
 			expected: "/tv_shows/测不准的阿波连同学 (2022) - S01E02.mkv",
 			wantErr:  false,
