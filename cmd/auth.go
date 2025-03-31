@@ -20,7 +20,7 @@ func init() {
 /**
 flow:
 
-0. bangumi init
+0. bangumi subscribe
 1. Get auth cookie from mikan 
 2. Parse My Subscribed anime 
 3. For each anime
@@ -35,10 +35,12 @@ flow:
 	- loop each folder under working dir
 	- if rss does not exist -> skip
 	- add torrent to qBittorrent but DO NOT START as it will block network speed
+	- save torrent hash as key and value as the anime title (folder name), later use bangumi group to move files
 5. manually group files to folder
 6. bangumi format to rename to jellyfin, plex format
 
 
 bangumi collect
 - bulk collect each anime in bangumi.tv to either hold or doing
+
 */
