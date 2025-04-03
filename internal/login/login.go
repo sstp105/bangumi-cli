@@ -1,16 +1,15 @@
-package auth
+package login
 
 import (
 	"fmt"
+	"github.com/sstp105/bangumi-cli/internal/sysutils"
 	"os"
 	"os/signal"
 
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/config"
 	"github.com/sstp105/bangumi-cli/internal/log"
-	"github.com/sstp105/bangumi-cli/internal/ospath"
 	"github.com/sstp105/bangumi-cli/internal/server"
-	"github.com/sstp105/bangumi-cli/internal/utils"
 )
 
 var ch = make(chan os.Signal, 1)
@@ -26,7 +25,7 @@ func authenticate() error {
 	var err error
 	overwrite := true
 
-	err = ospath.ReadJSONConfigFile(ospath.BangumiCredentialFile, &creds)
+	err = sysutils.ReadJSONConfigFile(sysutils.BangumiCredentialFile, &creds)
 
 	switch {
 	case err != nil && os.IsNotExist(err):
@@ -51,7 +50,7 @@ func authenticate() error {
 	}
 
 	if creds != nil && overwrite {
-		if err := ospath.SaveJSONConfigFile(ospath.BangumiCredentialFile, creds); err != nil {
+		if err := sysutils.SaveJSONConfigFile(sysutils.BangumiCredentialFile, creds); err != nil {
 			log.Fatalf("error saving bangumi credentials:%s", err)
 		}
 	}
@@ -65,7 +64,7 @@ func oauth() (*bangumi.OAuthCredential, error) {
 	clientID := config.BangumiClientID()
 	url := fmt.Sprintf("https://bgm.tv/oauth/authorize?client_id=%s&response_type=code&redirect_uri=%s", clientID, config.LocalServerAddress())
 
-	if err := utils.OpenBrowser(url); err != nil {
+	if err := sysutils.OpenBrowser(url); err != nil {
 		return nil, err
 	}
 

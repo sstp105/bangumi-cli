@@ -9,7 +9,7 @@ const (
 	oAuthBaseURL string = "https://bgm.tv"
 )
 
-// Client wraps a resty client for interacting with the bangumi API.
+// OAuthClient wraps a resty client for interacting with the bangumi API.
 type OAuthClient struct {
 	client *resty.Client
 }

@@ -1,4 +1,4 @@
-package plex
+package mediafmt
 
 type FileNameFormatter interface {
 	FormatFileName(f, dir string, metadata interface{}) (string, error)

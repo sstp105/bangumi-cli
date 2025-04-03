@@ -1,4 +1,4 @@
-package ospath
+package sysutils
 
 import (
 	"encoding/json"
@@ -6,8 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-
-	"github.com/sstp105/bangumi-cli/internal/utils"
 )
 
 const (
@@ -21,9 +19,9 @@ var (
 )
 
 var osConfigProviders = map[string]ConfigPathProvider{
-	utils.WindowsOS: WindowsConfig{},
-	utils.LinuxOS:   LinuxConfig{},
-	utils.MacOS:     MacOSConfig{},
+	WindowsOS: WindowsConfig{},
+	LinuxOS:   LinuxConfig{},
+	MacOS:     MacOSConfig{},
 }
 
 type ConfigPathProvider interface {
@@ -76,7 +74,7 @@ func SaveJSONConfigFile(fn string, v any) error {
 		return err
 	}
 
-	data, err := utils.MarshalJSONIndented(v)
+	data, err := MarshalJSONIndented(v)
 	if err != nil {
 		return err
 	}
@@ -106,7 +104,7 @@ func ReadJSONConfigFile(fn string, v any) error {
 func configPath(fn string) (string, error) {
 	provider, supported := osConfigProviders[runtime.GOOS]
 	if !supported {
-		return "", utils.ErrUnsupportedOS
+		return "", ErrUnsupportedOS
 	}
 
 	path, err := provider.ConfigPath()
