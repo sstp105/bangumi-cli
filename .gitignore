@@ -27,3 +27,6 @@ Desktop.ini
 # bin
 bangumi-cli.exe
 bangumi-cli
+
+# env
+.env

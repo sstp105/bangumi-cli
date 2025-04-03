@@ -1,6 +1,7 @@
-package utils
+package sysutils
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -38,4 +39,20 @@ func FindFiles(dir string, formats []string) ([]string, error) {
 	}
 
 	return nil, fmt.Errorf("no files found with formats %v", formats)
+}
+
+// MarshalJSONIndented serializes the given data (v) into a pretty-printed JSON format.
+//
+// Parameters:
+//   - v: Any Go data type that needs to be serialized into JSON.
+//
+// Returns:
+//   - []byte: The indented JSON byte slice.
+//   - error: An error if the marshaling process fails.
+func MarshalJSONIndented(v any) ([]byte, error) {
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

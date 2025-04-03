@@ -11,7 +11,7 @@ const (
 	baseURL string = "https://api.bgm.tv"
 
 	// defaultPaginationLimit is the default number of items per page when paginating through bangumi API.
-	defaultPaginaitonLimit int = 30
+	defaultPaginationLimit int = 30
 )
 
 var (
@@ -52,7 +52,7 @@ func (c *Client) GetUserCollections(username string, subjectType, collectionType
 	var collections []UserSubjectCollection
 	total := 1 // initially set as 1 for first request
 
-	for offset := 0; offset < total; offset += defaultPaginaitonLimit {
+	for offset := 0; offset < total; offset += defaultPaginationLimit {
 		resp, err := c.GetPaginatedUserCollections(username, subjectType, collectionType, offset)
 		if err != nil {
 			return nil, err
@@ -82,7 +82,7 @@ func (c *Client) GetPaginatedUserCollections(username string, subjectType, colle
 	params := map[string]string{
 		"subject_type": fmt.Sprintf("%d", subjectType),
 		"type":         fmt.Sprintf("%d", collectionType),
-		"limit":        fmt.Sprintf("%d", defaultPaginaitonLimit),
+		"limit":        fmt.Sprintf("%d", defaultPaginationLimit),
 		"offset":       fmt.Sprintf("%d", offset),
 	}
 	url := getUserCollectionsURL(username)

@@ -2,6 +2,8 @@ package bangumi
 
 import (
 	"fmt"
+	"github.com/sstp105/bangumi-cli/internal/sysutils"
+	"time"
 )
 
 // UserSubjectCollectionResponse represents the response for fetching user subject collections.
@@ -52,4 +54,48 @@ type ErrorResponse struct {
 // Error implements the error interface for ErrorResponse.
 func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("bangumi api error: %s - %s: %s", e.Title, e.Description, e.Details)
+}
+
+type OAuthErrorResponse struct {
+	ErrorCode        string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+}
+
+func (o *OAuthErrorResponse) Error() string {
+	return fmt.Sprintf("bangumi oauth api error: %s - %s", o.ErrorCode, o.ErrorDescription)
+}
+
+type OAuthCredential struct {
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
+	ExpiresIn    int64     `json:"expires_in"`
+	TokenType    string    `json:"token_type"`
+	ExpiresUntil time.Time `json:"expires_until,omitempty"` // custom injected field
+}
+
+func (o *OAuthCredential) IsValid() bool {
+	return time.Now().Before(o.ExpiresUntil)
+}
+
+func (o *OAuthCredential) ShouldRefresh() bool {
+	return o.ExpiresUntil.Before(time.Now().Add(24 * time.Hour))
+}
+
+func (o *OAuthCredential) IsExpired() bool {
+	return o.ExpiresUntil.Before(time.Now())
+}
+
+func (o *OAuthCredential) Print() error {
+	data, err := sysutils.MarshalJSONIndented(o)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(data))
+
+	return nil
+}
+
+func (o *OAuthCredential) setExpiresUntil() {
+	o.ExpiresUntil = time.Now().Add(time.Second * time.Duration(o.ExpiresIn))
 }

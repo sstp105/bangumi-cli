@@ -1,0 +1,13 @@
+# Ensure consistent line endings across all platforms
+* text=auto  
+
+# Force LF line endings for all Go-related files
+*.go text eol=lf
+go.mod text eol=lf
+go.sum text eol=lf
+
+# Force LF line endings for markdown and documentation files
+*.md text eol=lf
+
+# Force LF line endings for JSON and YAML files (common configuration files)
+*.json text eol=lf

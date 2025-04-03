@@ -2,18 +2,18 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/sstp105/bangumi-cli/internal/sysutils"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
 
 	"github.com/spf13/cobra"
-	"github.com/sstp105/bangumi-cli/internal/plex"
-	"github.com/sstp105/bangumi-cli/internal/utils"
+	"github.com/sstp105/bangumi-cli/internal/mediafmt"
 )
 
 var videoFormats []string = []string{".mp4", ".mkv", ".flac"}
-var fmtter plex.FileNameFormatter = plex.TVShowFormatter{}
+var fmtter mediafmt.FileNameFormatter = mediafmt.TVShowFormatter{}
 
 var renameCmd = &cobra.Command{
 	Use:   "rename",
@@ -63,7 +63,7 @@ func traverse(dir string) {
 }
 
 func process(dir string) {
-	files, err := utils.FindFiles(dir, videoFormats)
+	files, err := sysutils.FindFiles(dir, videoFormats)
 	if err != nil {
 		fmt.Printf("warning: no media files can be renamed in %s:%s\n", dir, err)
 		return
@@ -79,14 +79,14 @@ func rename(files []string, dir string) {
 	fmt.Printf("Processing directory:%s\n", dir)
 
 	// dry-run
-	paths, err := plex.FormatFiles(files, dir, fmtter)
+	paths, err := mediafmt.FormatFiles(files, dir, fmtter)
 	if err != nil {
 		fmt.Printf("error formatting files at %s:%s", dir, err)
 		return
 	}
 
 	// ask user before rename files
-	if ok := utils.Confirm("Do you want to proceed with renaming these files?"); !ok {
+	if ok := sysutils.Confirm("Do you want to proceed with renaming these files?"); !ok {
 		fmt.Printf("Cancelled rename process for %s", dir)
 		return
 	}

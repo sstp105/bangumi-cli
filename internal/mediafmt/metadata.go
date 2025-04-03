@@ -1,7 +1,7 @@
-package plex
+package mediafmt
 
 // TVShowMetadata represents Plex metadata information for a TV show.\
-// The metadata is used to generate the file name follow plex media formats.
+// The metadata is used to generate the file name follow mediafmt media formats.
 // Ref: https://support.plex.tv/articles/naming-and-organizing-your-tv-show-files/
 // The basic example is Title - S{X}E{X}.ext, e.g. 一杆青空 - S01E12.mp4.
 // If EpisodeTitle and Year are included, the format will be: Title (Year) - S{X}E{X} - EpisodeTitle.ext.
