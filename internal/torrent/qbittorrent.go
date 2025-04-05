@@ -3,7 +3,7 @@ package torrent
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/sstp105/bangumi-cli/internal/sysutils"
+	"github.com/sstp105/bangumi-cli/internal/libs"
 	"net/http"
 )
 
@@ -128,7 +128,7 @@ func loginQbittorrent(client *resty.Client, cfg QbittorrentClientConfig) (string
 		return "", fmt.Errorf("failed to login to qbittorrent, status: %d", resp.StatusCode())
 	}
 
-	authCookie, err := sysutils.GetCookie(resp.Cookies(), QBittorrentAuthCookieName)
+	authCookie, err := libs.GetCookie(resp.Cookies(), QBittorrentAuthCookieName)
 	if err != nil {
 		return "", fmt.Errorf("failed to get %s from response header:%s", QBittorrentAuthCookieName, err)
 	}

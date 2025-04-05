@@ -7,6 +7,7 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/log"
 )
 
+// Start starts a local HTTP server to handle requests (e.g. bangumi login)
 func Start(callback oAuthCallback) {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		oAuthHandler(w, r, callback)

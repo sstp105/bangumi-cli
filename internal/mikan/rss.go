@@ -7,12 +7,14 @@ import (
 	"strings"
 )
 
+// RSS represents the root rss structure.
 type RSS struct {
 	XMLName xml.Name `xml:"rss"`
 	Version string   `xml:"version,attr"`
 	Channel Channel  `xml:"channel"`
 }
 
+// Channel represents the channel information in an RSS feed.
 type Channel struct {
 	Title       string `xml:"title"`
 	Link        string `xml:"link"`
@@ -20,6 +22,7 @@ type Channel struct {
 	Items       []Item `xml:"item"`
 }
 
+// Item represents a single entry in an RSS feed.
 type Item struct {
 	Title       string    `xml:"title"`
 	Link        string    `xml:"link"`
@@ -29,6 +32,7 @@ type Item struct {
 	Enclosure   Enclosure `xml:"enclosure"`
 }
 
+// Enclosure represents media information within an RSS item.
 type Enclosure struct {
 	URL    string `xml:"url,attr"`
 	Type   string `xml:"type,attr"`

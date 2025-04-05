@@ -1,4 +1,4 @@
-package sysutils
+package libs
 
 import (
 	"bufio"
@@ -50,6 +50,6 @@ func SplitToSlice(s string) []string {
 	for i := range parts {
 		parts[i] = strings.TrimSpace(parts[i])
 	}
-	
+
 	return parts
 }

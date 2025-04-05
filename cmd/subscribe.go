@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/sstp105/bangumi-cli/internal/libs"
 	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
-	"github.com/sstp105/bangumi-cli/internal/sysutils"
 	"os"
 	"path/filepath"
 )
@@ -15,7 +15,7 @@ var subscribeCmd = &cobra.Command{
 		client := mikan.NewClient()
 
 		var list []mikan.BangumiBase
-		err := sysutils.ReadJSONConfigFile(sysutils.SubscribedBangumiConfigFile, &list)
+		err := libs.ReadJSONConfigFile(libs.SubscribedBangumiConfigFile, &list)
 		if err != nil {
 			log.Fatalf("read config file error: %s", err)
 		}
@@ -57,16 +57,16 @@ var subscribeCmd = &cobra.Command{
 			}
 
 			var input string
-			input = sysutils.ReadInput("Please enter word that must include, split by comma, hit enter to proceed: ")
+			input = libs.ReadInput("Please enter word that must include, split by comma, hit enter to proceed: ")
 
-			include := sysutils.SplitToSlice(input)
+			include := libs.SplitToSlice(input)
 			includeItems := rss.FilterInclude(include)
 			log.Infof("Updated list: ")
 			for _, item := range includeItems {
 				log.Infof("%s", item.Title)
 			}
 
-			proceed := sysutils.Confirm("Do you want to save?")
+			proceed := libs.Confirm("Do you want to save?")
 			if !proceed {
 				continue
 			}
@@ -84,7 +84,7 @@ var subscribeCmd = &cobra.Command{
 				Filters:     mikan.Filters{},
 			}
 
-			data, err := sysutils.MarshalJSONIndented(cfgFile)
+			data, err := libs.MarshalJSONIndented(cfgFile)
 			if err != nil {
 				log.Fatalf("failed to marshal bangumi config: %s", err)
 			}
@@ -129,7 +129,7 @@ func fetchSubscribedBangumi(client *mikan.Client) ([]mikan.BangumiBase, error) {
 		return nil, err
 	}
 
-	err = sysutils.SaveJSONConfigFile(sysutils.SubscribedBangumiConfigFile, list)
+	err = libs.SaveJSONConfigFile(libs.SubscribedBangumiConfigFile, list)
 	if err != nil {
 		return nil, err
 	}

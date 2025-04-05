@@ -2,7 +2,7 @@ package bangumi
 
 import (
 	"fmt"
-	"github.com/sstp105/bangumi-cli/internal/sysutils"
+	"github.com/sstp105/bangumi-cli/internal/libs"
 	"time"
 )
 
@@ -86,7 +86,7 @@ func (o *OAuthCredential) IsExpired() bool {
 }
 
 func (o *OAuthCredential) Print() error {
-	data, err := sysutils.MarshalJSONIndented(o)
+	data, err := libs.MarshalJSONIndented(o)
 	if err != nil {
 		return err
 	}

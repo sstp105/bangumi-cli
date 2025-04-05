@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/sstp105/bangumi-cli/internal/sysutils"
+	"github.com/sstp105/bangumi-cli/internal/libs"
 	"log"
 	"os"
 	"path/filepath"
@@ -63,7 +63,7 @@ func traverse(dir string) {
 }
 
 func process(dir string) {
-	files, err := sysutils.FindFiles(dir, videoFormats)
+	files, err := libs.FindFiles(dir, videoFormats)
 	if err != nil {
 		fmt.Printf("warning: no media files can be renamed in %s:%s\n", dir, err)
 		return
@@ -86,7 +86,7 @@ func rename(files []string, dir string) {
 	}
 
 	// ask user before rename files
-	if ok := sysutils.Confirm("Do you want to proceed with renaming these files?"); !ok {
+	if ok := libs.Confirm("Do you want to proceed with renaming these files?"); !ok {
 		fmt.Printf("Cancelled rename process for %s", dir)
 		return
 	}

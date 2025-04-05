@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/sstp105/bangumi-cli/internal/mikan"
 	"github.com/sstp105/bangumi-cli/internal/torrent"
 	"log"
 	"os"
@@ -17,7 +18,7 @@ type config struct {
 
 	qbittorrentConfig torrent.QbittorrentClientConfig
 
-	mikanAuthenticationCookie string
+	mikanClientConfig mikan.ClientConfig
 }
 
 var cfg config
@@ -38,7 +39,9 @@ func init() {
 		Password: os.Getenv(QBittorrentPasswordKey),
 	}
 
-	cfg.mikanAuthenticationCookie = os.Getenv(MikanAuthenticationCookieKey)
+	cfg.mikanClientConfig = mikan.ClientConfig{
+		IdentityCookie: os.Getenv(MikanIdentityCookieKey),
+	}
 
 	if err := cfg.validate(); err != nil {
 		log.Fatalf("config is invalid:%s", err)
@@ -61,8 +64,8 @@ func QBittorrentConfig() torrent.QbittorrentClientConfig {
 	return cfg.qbittorrentConfig
 }
 
-func MikanAuthenticationCookie() string {
-	return cfg.mikanAuthenticationCookie
+func MikanClientConfig() mikan.ClientConfig {
+	return cfg.mikanClientConfig
 }
 
 func LocalServerAddress() string {
@@ -94,8 +97,8 @@ func (c config) validate() error {
 		return fmt.Errorf("%s is empty", QBittorrentPasswordKey)
 	}
 
-	if c.mikanAuthenticationCookie == "" {
-		return fmt.Errorf("%s is empty", MikanAuthenticationCookieKey)
+	if c.mikanClientConfig.IdentityCookie == "" {
+		return fmt.Errorf("%s is empty", MikanIdentityCookieKey)
 	}
 
 	return nil

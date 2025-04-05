@@ -9,32 +9,47 @@ import (
 const (
 	baseURL = "https://mikanani.me"
 
+	identityCookieKey = ".AspNetCore.Identity.Application"
+	
 	myBangumiPath = "/Home/MyBangumi"
+)
+
+var (
+	headers = map[string]string{
+		"User-Agent":      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+		"Referer":         baseURL,
+		"Accept-Language": "en-US,en;q=0.9",
+	}
 )
 
 type Client struct {
 	client *resty.Client
 }
 
-func NewClient() *Client {
+type ClientConfig struct {
+	IdentityCookie string
+}
+
+func NewClient(cfg ClientConfig) (*Client, error) {
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("create mikan client err: %s", err)
+	}
+
 	c := resty.New()
 	c.SetBaseURL(baseURL)
-	c.SetHeaders(map[string]string{
-		"User-Agent":      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-		"Referer":         "https://mikanani.me/",
-		"Accept-Language": "en-US,en;q=0.9",
-	})
+	c.SetHeaders(headers)
 
 	cookies := []*http.Cookie{
 		{
-			Name:  ".AspNetCore.Identity.Application",
-			Value: "CfDJ8MyNMqFNaC9JmJW13PvY-93aPVQmcCyLPRZTnT3W3zvgOuH79yWk7oRY5ZgYqYbGGG4c-AtrSkMCzSBaOHz1dk1tZPZH4t140CQD6ENGsQyOY1djFGfHTdIh9YXYThxx880ZnZ1ylpBgMcDMnFAMHisU9fGhwaoaM1mkfF3LI4mCBFrcgH8TI3Cr4Bm6_6cycZPmqdFwcY8PTjaXIPT_eMhEe5_pVTzonHmbrnUz6jKrM5ChUZfZGM_MUmGyPrvFVNDxC1HD1Q_rQk7ydLTOfp5OeT7gHgfN7D5Yo-ur0lCs-5I5OdAATr3oEYNyQ-vol4NCu7StIGeBy5AEg3kDAP6mehsfNO8jOE7QBZNNP1g_UNN0p6IgouFts-ml0NR4wjr7bqTB3ctCOFZznRodSZqu6ep85HiY1OKRzK_S1_xwmomOA6berBqf_tNWxq479CpcurrWYP-fRtjnGTmFJnTwxMUIFB1fF9g7GiQrT417Ev4LpU6mlq_U9H_Je6NBd2nKgulve9A9t9WkLJUTU4n659Pd93luUvSLU1EX3h7YelsOtkF8ZGKkh3YlLQDWeYn2W4UEbU7jvpO6KJ9tHz-S2PpuQ7IJYMceVRhxJchiygy_hQFNikMJpaU4ze9C4vKBe2BIM6LIhcn6YFs8ssal5tDRl5YRxQsFWd4hCwmnFazgSH8DANsDbgR_4wmZFCbr5K9aFozqgumd3yKAjiA",
+			Name:  identityCookieKey,
+			Value: cfg.IdentityCookie,
 		},
 	}
 	c.SetCookies(cookies)
+
 	return &Client{
 		client: c,
-	}
+	}, nil
 }
 
 func (c *Client) GetSubscribedAnimation() (string, error) {
@@ -57,4 +72,12 @@ func (c *Client) GetBangumi(path string) (string, error) {
 	}
 
 	return resp.String(), nil
+}
+
+func (c *ClientConfig) validate() error {
+	if c.IdentityCookie == "" {
+		return fmt.Errorf("mikan identity cookie is empty")
+	}
+
+	return nil
 }

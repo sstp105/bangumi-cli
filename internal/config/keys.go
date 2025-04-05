@@ -9,5 +9,5 @@ const (
 	QBittorrentUserNameKey = "QBITTORRENT_USERNAME"
 	QBittorrentPasswordKey = "QBITTORRENT_PASSWORD"
 
-	MikanAuthenticationCookieKey = "MIKAN_AUTHENTICATION_COOKIE"
+	MikanIdentityCookieKey = "MIKAN_IDENTITY_COOKIE"
 )
