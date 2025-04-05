@@ -11,7 +11,7 @@ import (
 const (
 	AppDir = "bangumi-cli"
 
-	SubscribedBangumiConfigFile = "subscribed.bangumi.json"
+	SubscribedBangumiConfigFile = "subscribed_bangumi.json"
 	BangumiCredentialFile       = "bangumi_creds.json"
 )
 
@@ -114,7 +114,7 @@ func configPath(fn string) (string, error) {
 	}
 
 	dir := filepath.Join(path...)
-	if err := os.MkdirAll(dir, 0700); err != nil { // create the config folder if does not exist
+	if err := os.MkdirAll(dir, 0700); err != nil { // create the config folder if it does not exist
 		return "", err
 	}
 

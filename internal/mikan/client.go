@@ -16,8 +16,8 @@ const (
 
 	identityCookieKey = ".AspNetCore.Identity.Application"
 
-	myBangumiPath libs.Path = "/Home/BangumiCoverFlow?year=%d&seasonStr=%s"
-	bangumiPath   libs.Path = "/Home/Bangumi/%s"
+	myBangumiPath libs.APIPath = "/Home/BangumiCoverFlow?year=%d&seasonStr=%s"
+	bangumiPath   libs.APIPath = "/Home/Bangumi/%s"
 )
 
 var headers = map[string]string{

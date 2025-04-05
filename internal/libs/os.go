@@ -6,15 +6,21 @@ import (
 	"runtime"
 )
 
+const (
+	WindowsOS = "windows"
+	LinuxOS   = "linux"
+	MacOS     = "darwin"
+)
+
 var (
 	osOpenCommands = map[string][]string{
 		LinuxOS:   {"xdg-open"},
 		WindowsOS: {"rundll32", "url.dll,FileProtocolHandler"},
 		MacOS:     {"open"},
 	}
-)
 
-var ErrUnsupportedOS = errors.New("unsupported os")
+	ErrUnsupportedOS = errors.New("unsupported os")
+)
 
 func OpenBrowser(url string) error {
 	v, supported := osOpenCommands[runtime.GOOS]

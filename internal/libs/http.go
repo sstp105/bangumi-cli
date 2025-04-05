@@ -5,6 +5,12 @@ import (
 	"net/http"
 )
 
+type APIPath string
+
+func FormatAPIPath(p APIPath, args ...interface{}) string {
+	return fmt.Sprintf(string(p), args...)
+}
+
 func GetCookie(cookies []*http.Cookie, k string) (string, error) {
 	for _, c := range cookies {
 		if c.Name == k {
@@ -12,10 +18,4 @@ func GetCookie(cookies []*http.Cookie, k string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("cookie %s not found", k)
-}
-
-type Path string
-
-func FormatAPIPath(p Path, args ...interface{}) string {
-	return fmt.Sprintf(string(p), args...)
 }

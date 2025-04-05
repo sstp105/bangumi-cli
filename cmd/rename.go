@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/libs"
+	"github.com/sstp105/bangumi-cli/internal/prompt"
 	"log"
 	"os"
 	"path/filepath"
@@ -86,7 +87,7 @@ func rename(files []string, dir string) {
 	}
 
 	// ask user before rename files
-	if ok := libs.Confirm("Do you want to proceed with renaming these files?"); !ok {
+	if ok := prompt.Confirm("Do you want to proceed with renaming these files?"); !ok {
 		fmt.Printf("Cancelled rename process for %s", dir)
 		return
 	}

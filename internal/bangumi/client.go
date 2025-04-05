@@ -11,10 +11,10 @@ const (
 	baseURL string = "https://api.bgm.tv"
 
 	// getUserCollectionsPath is path for fetching a user's collections.
-	getUserCollectionsPath libs.Path = "/v0/users/%s/collections"
+	getUserCollectionsPath libs.APIPath = "/v0/users/%s/collections"
 
 	// postAccessToken is path for requesting bangumi access token
-	postAccessToken libs.Path = "/oauth/access_token"
+	postAccessToken libs.APIPath = "/oauth/access_token"
 
 	// defaultPaginationLimit is the default number of items per page when paginating through bangumi API.
 	defaultPaginationLimit int = 30

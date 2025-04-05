@@ -1,10 +1,9 @@
-package libs
+package prompt
 
 import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 )
 
 const (
@@ -35,21 +34,13 @@ func Confirm(msg string) bool {
 	return true
 }
 
-func ReadInput(msg string) string {
+// ReadUserInput prompts the user with a message and reads a line of input from the standard input (stdin).
+// It returns the input as a string.
+func ReadUserInput(msg string) string {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	fmt.Printf("\n%s: ", msg)
 
 	scanner.Scan()
 	return scanner.Text()
-}
-
-func SplitToSlice(s string) []string {
-	parts := strings.Split(s, ",")
-
-	for i := range parts {
-		parts[i] = strings.TrimSpace(parts[i])
-	}
-
-	return parts
 }
