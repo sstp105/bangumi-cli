@@ -3,9 +3,9 @@ package mikan
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/sstp105/bangumi-cli/internal/log"
+	"github.com/sstp105/bangumi-cli/internal/parser"
 	htmlutil "html"
-	"regexp"
-	"strings"
 )
 
 type BangumiBase struct {
@@ -27,14 +27,11 @@ type Filters struct {
 	Exclude []string `json:"exclude"`
 }
 
-func ParseMyBangumiList(html string) ([]BangumiBase, error) {
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse bangumi document: %w", err)
-	}
-
+func ParseMyBangumiList(doc *goquery.Document) ([]BangumiBase, error) {
 	var res []BangumiBase
-	doc.Find(".sk-bangumi ul li").Each(func(i int, s *goquery.Selection) {
+
+	selector := ".sk-bangumi ul li"
+	doc.Find(selector).Each(func(i int, s *goquery.Selection) {
 		b, err := parseMyBangumi(s)
 		if err != nil {
 			return
@@ -49,21 +46,23 @@ func ParseMyBangumiList(html string) ([]BangumiBase, error) {
 	return res, nil
 }
 
-func ParseBangumiID(html string) (string, error) {
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
-	if err != nil {
-		return "", err
-	}
-
+func ParseBangumiID(doc *goquery.Document) (string, error) {
 	var bangumiID string
-	doc.Find("p.bangumi-info a[href*='bgm.tv']").Each(func(i int, s *goquery.Selection) {
-		href, exists := s.Attr("href")
-		if exists {
-			parts := strings.Split(href, "/")
-			if len(parts) > 0 {
-				bangumiID = parts[len(parts)-1]
-			}
+
+	selector := "p.bangumi-info a[href*='bgm.tv'], p.bangumi-info a[href*='bangumi.tv']"
+	doc.Find(selector).Each(func(i int, s *goquery.Selection) {
+		href, exist := s.Attr("href")
+		if !exist {
+			return
 		}
+
+		id, err := parser.ParseSuffixID(href)
+		if err != nil {
+			log.Errorf("failed to parse bangumi id %s", href)
+			return
+		}
+
+		bangumiID = id
 	})
 
 	if bangumiID == "" {
@@ -73,15 +72,11 @@ func ParseBangumiID(html string) (string, error) {
 	return bangumiID, nil
 }
 
-func ParseSubscribedRSSLink(html string) (string, error) {
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
-	if err != nil {
-		return "", err
-	}
+func ParseSubscribedRSSLink(doc *goquery.Document) (string, error) {
+	// first seen group is the user subscribed fan-sub group
+	subscribedGroup := doc.Find("div.subgroup-text").First()
 
-	firstSubgroupText := doc.Find("div.subgroup-text").First()
-
-	rssLink := firstSubgroupText.Find("a.mikan-rss").AttrOr("href", "")
+	rssLink := subscribedGroup.Find("a.mikan-rss").AttrOr("href", "")
 	if rssLink == "" {
 		return "", fmt.Errorf("RSS link not found")
 	}
@@ -91,36 +86,25 @@ func ParseSubscribedRSSLink(html string) (string, error) {
 
 func parseMyBangumi(s *goquery.Selection) (*BangumiBase, error) {
 	a := s.Find("a.an-text")
-	link, exists := a.Attr("href")
-	if !exists {
-		return nil, fmt.Errorf("failed to parse mikan bangumi link")
+	href, exist := a.Attr("href")
+	if !exist {
+		return nil, fmt.Errorf("failed to parse bangumi link")
 	}
 
 	name, exists := a.Attr("title")
 	if !exists {
-		return nil, fmt.Errorf("failed to parse mikan bangumi title")
+		return nil, fmt.Errorf("failed to parse bangumi title")
 	}
-	name = htmlutil.UnescapeString(name)
+	name = htmlutil.UnescapeString(name) // mikan bangumi title are escaped
 
-	id, err := parseBangumiID(link)
+	id, err := parser.ParseSuffixID(href)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse mikan bangumi id: %w", err)
+		return nil, fmt.Errorf("failed to parse bangumi id: %w", err)
 	}
 
 	return &BangumiBase{
 		ID:   id,
 		Name: name,
-		Link: link,
+		Link: href,
 	}, nil
-}
-
-func parseBangumiID(s string) (string, error) {
-	re := regexp.MustCompile(`/Home/Bangumi/(\d+)`)
-
-	match := re.FindStringSubmatch(s)
-	if len(match) < 2 {
-		return "", fmt.Errorf("could not parse Bangumi ID from the input string")
-	}
-
-	return match[1], nil
 }
