@@ -119,7 +119,7 @@ func init() {
 }
 
 func fetchSubscribedBangumi(client *mikan.Client) ([]mikan.BangumiBase, error) {
-	html, err := client.GetSubscribedAnimation()
+	html, err := client.GetMyBangumi()
 	if err != nil {
 		return nil, err
 	}

@@ -13,3 +13,9 @@ func GetCookie(cookies []*http.Cookie, k string) (string, error) {
 	}
 	return "", fmt.Errorf("cookie %s not found", k)
 }
+
+type Path string
+
+func FormatAPIPath(p Path, args ...interface{}) string {
+	return fmt.Sprintf(string(p), args...)
+}
