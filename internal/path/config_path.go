@@ -1,47 +1,22 @@
-package libs
+package path
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/sstp105/bangumi-cli/internal/libs"
 	"os"
 	"path/filepath"
 	"runtime"
 )
 
-const (
-	AppDir = "bangumi-cli"
-
-	SubscribedBangumiConfigFile = "subscribed_bangumi.json"
-	BangumiCredentialFile       = "bangumi_creds.json"
-)
-
-var (
-	ErrWindowsAppDataEnvNotFound = errors.New("APPDATA env is not found")
-)
-
-var osConfigProviders = map[string]ConfigPathProvider{
-	WindowsOS: WindowsConfig{},
-	LinuxOS:   LinuxConfig{},
-	MacOS:     MacOSConfig{},
-}
-
-type ConfigPathProvider interface {
-	ConfigPath() ([]string, error)
-}
-
-type WindowsConfig struct{}
-
-func (w WindowsConfig) ConfigPath() ([]string, error) {
-	dir := os.Getenv("APPDATA")
-	if dir == "" {
+func (w WindowsPath) ConfigPath() ([]string, error) {
+	appdata := os.Getenv("APPDATA")
+	if appdata == "" {
 		return nil, ErrWindowsAppDataEnvNotFound
 	}
-	return []string{dir, AppDir}, nil
+	return []string{appdata, AppDir}, nil
 }
 
-type LinuxConfig struct{}
-
-func (l LinuxConfig) ConfigPath() ([]string, error) {
+func (l LinuxPath) ConfigPath() ([]string, error) {
 	dir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
@@ -49,9 +24,7 @@ func (l LinuxConfig) ConfigPath() ([]string, error) {
 	return []string{dir, ".config", AppDir}, nil
 }
 
-type MacOSConfig struct{}
-
-func (m MacOSConfig) ConfigPath() ([]string, error) {
+func (m MacOSPath) ConfigPath() ([]string, error) {
 	dir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
@@ -75,7 +48,7 @@ func SaveJSONConfigFile(fn string, v any) error {
 		return err
 	}
 
-	data, err := MarshalJSONIndented(v)
+	data, err := libs.MarshalJSONIndented(v)
 	if err != nil {
 		return err
 	}
@@ -103,9 +76,9 @@ func ReadJSONConfigFile(fn string, v any) error {
 }
 
 func configPath(fn string) (string, error) {
-	provider, supported := osConfigProviders[runtime.GOOS]
+	provider, supported := osPathProviders[runtime.GOOS]
 	if !supported {
-		return "", ErrUnsupportedOS
+		return "", libs.ErrUnsupportedOS
 	}
 
 	path, err := provider.ConfigPath()

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/libs"
+	"github.com/sstp105/bangumi-cli/internal/path"
 	"os"
 	"os/signal"
 
@@ -32,7 +33,7 @@ func authenticate() error {
 	var err error
 	overwrite := true
 
-	err = libs.ReadJSONConfigFile(libs.BangumiCredentialFile, &credential)
+	err = path.ReadJSONConfigFile(path.BangumiCredentialFile, &credential)
 
 	switch {
 	case err != nil && os.IsNotExist(err):
@@ -57,7 +58,7 @@ func authenticate() error {
 	}
 
 	if credential != nil && overwrite {
-		if err := libs.SaveJSONConfigFile(libs.BangumiCredentialFile, credential); err != nil {
+		if err := path.SaveJSONConfigFile(path.BangumiCredentialFile, credential); err != nil {
 			log.Fatalf("error saving bangumi credentials:%s", err)
 		}
 	}
