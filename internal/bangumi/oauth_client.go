@@ -1,15 +1,69 @@
 package bangumi
 
 import (
+	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/sstp105/bangumi-cli/internal/libs"
+	"time"
 )
 
+// Constants
 const (
-	// oauthBaseURL is the base URL for the bangumi oauth API.
+	// oAuthBaseURL is the base URL for the Bangumi OAuth API.
 	oAuthBaseURL string = "https://bgm.tv"
 )
 
-// OAuthClient wraps a resty client for interacting with the bangumi API.
+// OAuthErrorResponse represents the error response structure from the OAuth API.
+type OAuthErrorResponse struct {
+	ErrorCode        string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+}
+
+// Error implements the error interface for OAuthErrorResponse.
+func (o *OAuthErrorResponse) Error() string {
+	return fmt.Sprintf("bangumi oauth api error: %s - %s", o.ErrorCode, o.ErrorDescription)
+}
+
+// OAuthCredential represents the OAuth credentials.
+type OAuthCredential struct {
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
+	ExpiresIn    int64     `json:"expires_in"`
+	TokenType    string    `json:"token_type"`
+	ExpiresUntil time.Time `json:"expires_until,omitempty"` // custom injected field
+}
+
+// IsValid checks if the OAuthCredential AccessToken is valid (not expired).
+func (o *OAuthCredential) IsValid() bool {
+	return time.Now().Before(o.ExpiresUntil)
+}
+
+// ShouldRefresh checks if the  OAuthCredential AccessToken should be refreshed.
+func (o *OAuthCredential) ShouldRefresh() bool {
+	return o.ExpiresUntil.Before(time.Now().Add(24 * time.Hour))
+}
+
+// IsExpired checks if the OAuthCredential AccessToken has expired.
+func (o *OAuthCredential) IsExpired() bool {
+	return o.ExpiresUntil.Before(time.Now())
+}
+
+// Print prints the OAuthCredential in JSON format.
+func (o *OAuthCredential) Print() error {
+	data, err := libs.MarshalJSONIndented(o)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(data))
+	return nil
+}
+
+// setExpiresUntil sets the expiration time for the OAuth credential.
+func (o *OAuthCredential) setExpiresUntil() {
+	o.ExpiresUntil = time.Now().Add(time.Second * time.Duration(o.ExpiresIn))
+}
+
+// OAuthClient wraps a resty.Client for interacting with the Bangumi API.
 type OAuthClient struct {
 	client *resty.Client
 }
@@ -24,56 +78,40 @@ func NewOAuthClient() *OAuthClient {
 	}
 }
 
+// GetAccessToken gets an OAuthCredential using an authorization code.
 func (o *OAuthClient) GetAccessToken(clientID, clientSecret, redirectURI, code string) (*OAuthCredential, error) {
-	creds := OAuthCredential{}
-	errorResp := OAuthErrorResponse{}
-
-	data := map[string]string{
-		"grant_type":    "authorization_code",
-		"client_id":     clientID,
-		"client_secret": clientSecret,
-		"code":          code,
-		"redirect_uri":  redirectURI,
-	}
-	url := postAccessTokenURL()
-
-	resp, err := o.client.R().
-		SetHeader("Content-Type", "application/x-www-form-urlencoded").
-		SetFormData(data).
-		SetResult(&creds).
-		SetError(&errorResp).
-		Post(url)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.IsError() {
-		return nil, &errorResp
-	}
-
-	creds.setExpiresUntil()
-
-	return &creds, nil
+	return o.requestOAuthToken("authorization_code", clientID, clientSecret, redirectURI, code)
 }
 
+// RefreshAccessToken refreshes the OAuthCredential using a refresh token.
 func (o *OAuthClient) RefreshAccessToken(clientID, clientSecret, redirectURI, refreshToken string) (*OAuthCredential, error) {
-	creds := OAuthCredential{}
+	return o.requestOAuthToken("refresh_token", clientID, clientSecret, redirectURI, refreshToken)
+}
+
+// requestOAuthToken handles the logic for requesting OAuthCredential (both new and refreshed).
+func (o *OAuthClient) requestOAuthToken(grantType, clientID, clientSecret, redirectURI, codeOrRefreshToken string) (*OAuthCredential, error) {
+	credential := OAuthCredential{}
 	errorResp := OAuthErrorResponse{}
 
 	data := map[string]string{
-		"grant_type":    "refresh_token",
+		"grant_type":    grantType,
 		"client_id":     clientID,
 		"client_secret": clientSecret,
-		"refresh_token": refreshToken,
 		"redirect_uri":  redirectURI,
 	}
-	url := postAccessTokenURL()
+	
+	if grantType == "authorization_code" {
+		data["code"] = codeOrRefreshToken
+	} else if grantType == "refresh_token" {
+		data["refresh_token"] = codeOrRefreshToken
+	}
+
+	url := libs.FormatAPIPath(postAccessToken)
 
 	resp, err := o.client.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetFormData(data).
-		SetResult(&creds).
+		SetResult(&credential).
 		SetError(&errorResp).
 		Post(url)
 
@@ -85,7 +123,7 @@ func (o *OAuthClient) RefreshAccessToken(clientID, clientSecret, redirectURI, re
 		return nil, &errorResp
 	}
 
-	creds.setExpiresUntil()
+	credential.setExpiresUntil()
 
-	return &creds, nil
+	return &credential, nil
 }
