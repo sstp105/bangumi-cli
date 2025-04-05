@@ -15,7 +15,7 @@ const (
 	QBittorrentAPIAddPath = "/api/torrents/add"
 )
 
-var ErrQBittorrentPortNotFound = fmt.Errorf("qBittorrent port not found")
+var ErrQBittorrentServerNotFound = fmt.Errorf("qBittorrent port not found")
 var ErrQBittorrentUserNameNotFound = fmt.Errorf("qBittorrent username not found")
 var ErrQBittorrentPasswordNotFound = fmt.Errorf("qBittorrent password not found")
 
@@ -33,14 +33,14 @@ type QBittorrentClient struct {
 
 // QbittorrentClientConfig represents the configuration required to interact with a qBittorrent client.
 type QbittorrentClientConfig struct {
-	// Port is the port where the qBittorrent Web API is running (default 8080).
-	Port string `json:"port"`
+	// Server is the port where the qBittorrent Web API is running (e.g. localhost:8080).
+	Server string
 
 	// Username is the username used for authenticating against the qBittorrent Web API.
-	Username string `json:"username"`
+	Username string
 
 	// Password is the password used for authenticating against the qBittorrent Web API.
-	Password string `json:"password"`
+	Password string
 }
 
 // NewQBittorrentClient https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#authentication
@@ -50,7 +50,7 @@ func NewQBittorrentClient(cfg QbittorrentClientConfig) (*QBittorrentClient, erro
 	}
 
 	c := resty.New()
-	c.SetBaseURL(fmt.Sprintf("http://localhost:%s", cfg.Port))
+	c.SetBaseURL(cfg.Server)
 
 	authCookie, err := loginQbittorrent(c, cfg)
 	if err != nil {
@@ -91,8 +91,8 @@ func (q *QBittorrentClient) Name() string {
 
 // validate checks that the configuration fields for the qBittorrent client are set correctly.
 func (q *QbittorrentClientConfig) validate() error {
-	if q.Port == "" {
-		return ErrQBittorrentPortNotFound
+	if q.Server == "" {
+		return ErrQBittorrentServerNotFound
 	}
 
 	if q.Username == "" {

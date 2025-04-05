@@ -5,7 +5,7 @@ const (
 	BangumiClientIDKey     = "BANGUMI_CLIENT_ID"
 	BangumiClientSecretKey = "BANGUMI_CLIENT_SECRET"
 
-	QBittorrentPortKey     = "QBITTORRENT_PORT"
+	QBittorrentServerKey   = "QBITTORRENT_SERVER"
 	QBittorrentUserNameKey = "QBITTORRENT_USERNAME"
 	QBittorrentPasswordKey = "QBITTORRENT_PASSWORD"
 

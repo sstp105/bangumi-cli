@@ -33,7 +33,7 @@ func init() {
 	cfg.bangumiClientSecret = os.Getenv(BangumiClientSecretKey)
 
 	cfg.qbittorrentConfig = torrent.QbittorrentClientConfig{
-		Port:     os.Getenv(QBittorrentPortKey),
+		Server:   os.Getenv(QBittorrentServerKey),
 		Username: os.Getenv(QBittorrentUserNameKey),
 		Password: os.Getenv(QBittorrentPasswordKey),
 	}
@@ -82,8 +82,8 @@ func (c config) validate() error {
 		return fmt.Errorf("%s is empty", BangumiClientSecretKey)
 	}
 
-	if c.qbittorrentConfig.Port == "" {
-		return fmt.Errorf("%s is empty", QBittorrentPortKey)
+	if c.qbittorrentConfig.Server == "" {
+		return fmt.Errorf("%s is empty", QBittorrentServerKey)
 	}
 
 	if c.qbittorrentConfig.Username == "" {
