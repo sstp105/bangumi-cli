@@ -11,7 +11,8 @@ import (
 const (
 	AppDir = "bangumi-cli"
 
-	BangumiCredentialFile = "bangumi_creds.json"
+	SubscribedBangumiConfigFile = "subscribed.bangumi.json"
+	BangumiCredentialFile       = "bangumi_creds.json"
 )
 
 var (

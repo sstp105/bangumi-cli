@@ -9,7 +9,9 @@ require (
 )
 
 require (
-	golang.org/x/net v0.33.0 // indirect
+	github.com/PuerkitoBio/goquery v1.10.2 // indirect
+	github.com/andybalholm/cascadia v1.3.3 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 )
 
