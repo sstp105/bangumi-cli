@@ -15,6 +15,11 @@ touch .env
 LOCAL_SERVER_PORT=8765
 BANGUMI_CLIENT_ID=<bangumi APP ID, 可在开发者平台获取>
 BANGUMI_CLIENT_SECRET=<bangumi APP Secret, 可在开发者平台获取>
+QBITTORRENT_PORT=8080
+QBITTORRENT_USER_NAME=admin
+QBITTORRENT_PASSWORD=<>
+MIKAN_AUTH_COOKIE=<>
+
 ```
 
 根据你的系统使用对应的命令来编译：
