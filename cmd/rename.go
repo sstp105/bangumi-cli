@@ -13,7 +13,7 @@ import (
 )
 
 var videoFormats []string = []string{".mp4", ".mkv", ".flac"}
-var fmtter mediafmt.FileNameFormatter = mediafmt.TVShowFormatter{}
+var fmtter mediafmt.MediaFormatter = mediafmt.TVShowFormatter{}
 
 var renameCmd = &cobra.Command{
 	Use:   "rename",

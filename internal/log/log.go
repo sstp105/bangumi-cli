@@ -2,22 +2,33 @@ package log
 
 import (
 	"fmt"
-
 	"github.com/sirupsen/logrus"
+	"os"
+	"time"
 )
 
-var log = logrus.New()
-
-type PlainFormatter struct {
-}
+var (
+	log = logrus.New()
+)
 
 func init() {
 	log.SetLevel(logrus.DebugLevel)
-	log.SetFormatter(&PlainFormatter{})
-}
+	log.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp:    true,
+		TimestampFormat:  "2006-01-02 15:04:05",
+		DisableTimestamp: false,
+		DisableSorting:   false,
+		ForceColors:      true,
+	})
 
-func (f *PlainFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	return []byte(fmt.Sprintf("%s\n", entry.Message)), nil
+	date := time.Now().Format("2006-01-02")
+
+	logFile, err := os.OpenFile(fmt.Sprintf("%s.log", date), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening log file: %s", err)
+	}
+
+	log.SetOutput(logFile)
 }
 
 func Info(args ...interface{}) {

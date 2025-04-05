@@ -7,7 +7,8 @@ import (
 
 type MovieFormatter struct{}
 
-var moviefmtter = MovieFormatter{}
+// TODO
+var _ = MovieFormatter{}
 
 // FormatFiles formats/renames a list of movies based on the information derived from the directory name.
 //
