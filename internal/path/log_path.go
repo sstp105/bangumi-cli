@@ -1,27 +1,33 @@
 package path
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+)
 
-func (w WindowsPath) LogPath() ([]string, error) {
-	dir := os.Getenv("APPDATA")
-	if dir == "" {
-		return nil, ErrWindowsAppDataEnvNotFound
+// LogPath returns the windows path to the app's log directory in %LocalAppData%\<APP_NAME>\logs.
+func (w WindowsPath) LogPath() (string, error) {
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
 	}
-	return []string{dir, AppDir}, nil
+	return filepath.Join(dir, AppDir, "logs"), nil
 }
 
-func (l LinuxPath) LogPath() ([]string, error) {
-	home, err := os.UserHomeDir()
+// LogPath returns the linux path to the app's log directory in $HOME/.local/share/<APP_NAME>/logs.
+func (l LinuxPath) LogPath() (string, error) {
+	dir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return []string{home, ".config", AppDir}, nil
+	return filepath.Join(dir, ".local", "share", AppDir, "logs"), nil
 }
 
-func (m MacOSPath) LogPath() ([]string, error) {
-	home, err := os.UserConfigDir()
+// LogPath returns the macOS path to the app's log directory in $HOME/Library/Logs/<APP_NAME>.
+func (m MacOSPath) LogPath() (string, error) {
+	dir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return []string{home, "Library", "Logs", AppDir}, nil
+	return filepath.Join(dir, "Library", "Logs", AppDir), nil
 }

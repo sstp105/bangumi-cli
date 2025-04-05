@@ -8,28 +8,31 @@ import (
 	"runtime"
 )
 
-func (w WindowsPath) ConfigPath() ([]string, error) {
-	appdata := os.Getenv("APPDATA")
-	if appdata == "" {
-		return nil, ErrWindowsAppDataEnvNotFound
+// ConfigPath returns the Windows path to the app's config directory in %AppData%\{APP_NAME}.
+func (w WindowsPath) ConfigPath() (string, error) {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return "", err
 	}
-	return []string{appdata, AppDir}, nil
+	return filepath.Join(dir, AppDir), nil
 }
 
-func (l LinuxPath) ConfigPath() ([]string, error) {
+// ConfigPath returns the Linux path to the app's config directory in $HOME/.config/<APP_NAME>.
+func (l LinuxPath) ConfigPath() (string, error) {
 	dir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return []string{dir, ".config", AppDir}, nil
+	return filepath.Join(dir, ".config", AppDir), nil
 }
 
-func (m MacOSPath) ConfigPath() ([]string, error) {
+// ConfigPath returns the macOS path to the app's config directory in $HOME/.config/<APP_NAME>.
+func (m MacOSPath) ConfigPath() (string, error) {
 	dir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return []string{dir, ".config", AppDir}, nil
+	return filepath.Join(dir, ".config", AppDir), nil
 }
 
 // SaveJSONConfigFile saves the value in json format under app's config directory.
@@ -39,9 +42,6 @@ func (m MacOSPath) ConfigPath() ([]string, error) {
 // Parameters:
 //   - fn: The file name (e.g., "setting.json").
 //   - v: The value to be saved to the file. It will be marshaled into JSON format.
-//
-// Returns:
-//   - error: If any error occurs during the process, an error is returned.
 func SaveJSONConfigFile(fn string, v any) error {
 	path, err := configPath(fn)
 	if err != nil {
@@ -86,10 +86,9 @@ func configPath(fn string) (string, error) {
 		return "", err
 	}
 
-	dir := filepath.Join(path...)
-	if err := os.MkdirAll(dir, 0700); err != nil { // create the config folder if it does not exist
+	if err := os.MkdirAll(path, 0700); err != nil { // create the config folder if it does not exist
 		return "", err
 	}
 
-	return filepath.Join(dir, fn), nil
+	return filepath.Join(path, fn), nil
 }

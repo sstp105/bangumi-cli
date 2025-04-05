@@ -33,7 +33,7 @@ func authenticate() error {
 	var err error
 	overwrite := true
 
-	err = path.ReadJSONConfigFile(path.BangumiCredentialFile, &credential)
+	err = path.ReadJSONConfigFile(path.BangumiCredentialConfigFile, &credential)
 
 	switch {
 	case err != nil && os.IsNotExist(err):
@@ -58,7 +58,7 @@ func authenticate() error {
 	}
 
 	if credential != nil && overwrite {
-		if err := path.SaveJSONConfigFile(path.BangumiCredentialFile, credential); err != nil {
+		if err := path.SaveJSONConfigFile(path.BangumiCredentialConfigFile, credential); err != nil {
 			log.Fatalf("error saving bangumi credentials:%s", err)
 		}
 	}
