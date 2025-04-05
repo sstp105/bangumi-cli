@@ -12,7 +12,8 @@ const (
 
 	QBittorrentAuthCookieName = "Set-Cookie"
 
-	QBittorrentAPIAddPath = "/api/torrents/add"
+	QBittorrentAPIAddPath   = "/api/torrents/add"
+	QBittorrentAPILoginPath = "/api/v2/auth/login"
 )
 
 var ErrQBittorrentServerNotFound = fmt.Errorf("qBittorrent port not found")
@@ -71,6 +72,10 @@ func (q *QBittorrentClient) Add(link string) error {
 			"urls":   link,
 			"paused": "true", // TODO: decouple as option (from caller) later
 		}).
+		SetCookie(&http.Cookie{
+			Name:  "SID",
+			Value: q.cookie,
+		}).
 		Post(QBittorrentAPIAddPath)
 
 	if err != nil {
@@ -113,7 +118,7 @@ func loginQbittorrent(client *resty.Client, cfg QbittorrentClientConfig) (string
 		SetFormData(map[string]string{
 			"username": cfg.Username,
 			"password": cfg.Password,
-		}).Post("/api/v2/auth/login")
+		}).Post(QBittorrentAPILoginPath)
 
 	if err != nil {
 		return "", fmt.Errorf("login qbittorrent client error:%s", err)
