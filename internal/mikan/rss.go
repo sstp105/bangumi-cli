@@ -2,8 +2,6 @@ package mikan
 
 import (
 	"encoding/xml"
-	"fmt"
-	"net/http"
 	"strings"
 )
 
@@ -34,37 +32,21 @@ type Item struct {
 
 // Enclosure represents media information within an RSS item.
 type Enclosure struct {
-	URL    string `xml:"url,attr"`
+	// URL is the torrent file downloadable url.
+	URL string `xml:"url,attr"`
+
 	Type   string `xml:"type,attr"`
 	Length string `xml:"length,attr"`
 }
 
-func LoadRSS(url string) (*RSS, error) {
-	resp, err := http.Get(fmt.Sprintf("%s%s", baseURL, url))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var rss RSS
-	decoder := xml.NewDecoder(resp.Body)
-	err = decoder.Decode(&rss)
-	if err != nil {
-		return nil, err
-	}
-
-	return &rss, nil
-}
-
-func (r *RSS) FilterInclude(filters []string) []Item {
+// Filter filters the RSS items based on the provided filters.
+func (r *RSS) Filter(filters Filters) []Item {
 	var items []Item
 
 	for _, item := range r.Channel.Items {
-		itemTitle := item.Title
 		match := true
-
-		for _, f := range filters {
-			if !strings.Contains(strings.ToLower(itemTitle), strings.ToLower(f)) {
+		for _, f := range filters.Include {
+			if !strings.Contains(strings.ToLower(item.Title), strings.ToLower(f)) {
 				match = false
 				break
 			}

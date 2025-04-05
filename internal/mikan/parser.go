@@ -8,25 +8,43 @@ import (
 	htmlutil "html"
 )
 
+// BangumiBase represents the basic information about a Mikan bangumi.
+// The struct is also used to be saved as local config for subsequent fetch/update.
 type BangumiBase struct {
-	ID   string `json:"id"`
+	// ID represents Mikan bangumi id.
+	ID string `json:"id"`
+
+	// Name represents the bangumi name in Simplified Chinese language.
 	Name string `json:"name"`
+
+	// Link represents the Mikan bangumi detail page url.
 	Link string `json:"link"`
 }
 
+// Bangumi represents detailed information about a Mikan bangumi
 type Bangumi struct {
 	BangumiBase
-	BangumiID string   `json:"bangumi_id"`
-	RSSLink   string   `json:"rss_link"`
-	Torrents  []string `json:"torrents"`
-	Filters   Filters  `json:"filters"`
+
+	// BangumiID represents bangumi.tv id.
+	BangumiID string `json:"bangumi_id"`
+
+	// RSSLink represents the rss feed url for the bangumi.
+	RSSLink string `json:"rss_link"`
+
+	// Torrents holds a slice of torrent link or files for the bangumi.
+	Torrents []string `json:"torrents"`
+
+	// Filters holds user configured Filters.
+	Filters Filters `json:"filters"`
 }
 
+// Filters represents the filter settings for including or excluding specific content from the rss.
 type Filters struct {
+	// Include holds a slice of string that must contain.
 	Include []string `json:"include"`
-	Exclude []string `json:"exclude"`
 }
 
+// ParseMyBangumiList parses all subscribed bangumi.
 func ParseMyBangumiList(doc *goquery.Document) ([]BangumiBase, error) {
 	var res []BangumiBase
 
@@ -46,6 +64,7 @@ func ParseMyBangumiList(doc *goquery.Document) ([]BangumiBase, error) {
 	return res, nil
 }
 
+// ParseBangumiID parses the bangumi.tv id from the mikan bangumi detail page.
 func ParseBangumiID(doc *goquery.Document) (string, error) {
 	var bangumiID string
 
@@ -72,6 +91,7 @@ func ParseBangumiID(doc *goquery.Document) (string, error) {
 	return bangumiID, nil
 }
 
+// ParseSubscribedRSSLink pares the user subscribed fan-sub rss feed link from mikan bangumi page.
 func ParseSubscribedRSSLink(doc *goquery.Document) (string, error) {
 	// first seen group is the user subscribed fan-sub group
 	subscribedGroup := doc.Find("div.subgroup-text").First()
@@ -84,6 +104,7 @@ func ParseSubscribedRSSLink(doc *goquery.Document) (string, error) {
 	return rssLink, nil
 }
 
+// parseMyBangumi parses the bangumi element from the user subscribed bangumi list.
 func parseMyBangumi(s *goquery.Selection) (*BangumiBase, error) {
 	a := s.Find("a.an-text")
 	href, exist := a.Attr("href")

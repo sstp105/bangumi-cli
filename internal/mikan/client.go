@@ -1,6 +1,7 @@
 package mikan
 
 import (
+	"encoding/xml"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/sstp105/bangumi-cli/internal/libs"
@@ -98,8 +99,7 @@ func (c *Client) GetMyBangumi(opts ...ClientOption) (string, error) {
 
 // GetBangumi returns the response from Mikan bangumi detail page.
 func (c *Client) GetBangumi(id string) (string, error) {
-	resp, err := c.client.R().
-		Get(libs.FormatAPIPath(bangumiPath, id))
+	resp, err := c.client.R().Get(libs.FormatAPIPath(bangumiPath, id))
 
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch bangumi page: %w", err)
@@ -108,6 +108,24 @@ func (c *Client) GetBangumi(id string) (string, error) {
 	return resp.String(), nil
 }
 
+// ReadRSS reads and decodes the rss link as RSS
+func (c *Client) ReadRSS(url string) (*RSS, error) {
+	resp, err := c.client.R().Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	var rss RSS
+	decoder := xml.NewDecoder(resp.RawBody())
+	err = decoder.Decode(&rss)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rss, nil
+}
+
+// WithYearAndSeason sets the year and season for the client option.
 func WithYearAndSeason(year int, season season.Season) ClientOption {
 	return func(opt *clientOption) {
 		opt.year = year
