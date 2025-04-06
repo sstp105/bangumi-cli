@@ -10,6 +10,17 @@ import (
 var year int
 var seasonID int
 
+/*
+subscribeCmd will perform the following tasks:
+
+If no subscribed bangumi config is found locally, it fetches the user's subscribed bangumi list from Mikan, parses and saves the config.
+For each bangumi, it requests the corresponding Mikan bangumi page, parses the bangumi.tv ID and the user-subscribed fan-sub RSS link,
+prompts the user to filter desired torrent files, and stores the config locally for further processing.
+
+If a subscribed bangumi config already exists, it fetches the latest subscribed list from Mikan,
+compares it with the local config, and prompts the user to add any new bangumi.
+If a bangumi is no longer present on Mikan, it prompts the user to confirm whether to unsubscribe it locally.
+*/
 var subscribeCmd = &cobra.Command{
 	Use:   "subscribe",
 	Short: "订阅你在 Mikan 上关注的番剧",

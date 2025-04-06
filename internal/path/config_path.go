@@ -77,7 +77,7 @@ func ReadJSONConfigFile(fn string, v any) error {
 	return nil
 }
 
-func SubscribedBangumiConfigFile(year int, seasonID season.ID) (string, error) {
+func SubscriptionConfigFile(year int, seasonID season.ID) (string, error) {
 	_, err := seasonID.Season()
 	if err != nil {
 		return "", fmt.Errorf("seasonID.Season() failed: %v", err)

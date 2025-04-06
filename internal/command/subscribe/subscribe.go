@@ -5,7 +5,6 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/config"
 	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/libs"
-	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
 	"github.com/sstp105/bangumi-cli/internal/parser"
 	"github.com/sstp105/bangumi-cli/internal/path"
@@ -15,68 +14,106 @@ import (
 	"path/filepath"
 )
 
-/*
-Run will perform the following tasks:
-
-If no subscribed bangumi config is found locally, it fetches the user's subscribed bangumi list from Mikan, parses and saves the config.
-For each bangumi, it requests the corresponding Mikan bangumi page, parses the bangumi.tv ID and the user-subscribed fan-sub RSS link,
-prompts the user to filter desired torrent files, and stores the config locally for further processing.
-
-If a subscribed bangumi config already exists, it fetches the latest subscribed list from Mikan,
-compares it with the local config, and prompts the user to add any new bangumi.
-If a bangumi is no longer present on Mikan, it prompts the user to confirm whether to unsubscribe it locally.
-*/
 func Run(year int, seasonID season.ID) {
 	client, err := mikan.NewClient(config.MikanClientConfig())
 	if err != nil {
-		console.Errorf("初始化mikan客户端错误:%s", err)
-		log.Errorf("error creating mikan client:%s", err)
+		console.Errorf("初始化 mikan 客户端错误:%s", err)
 		return
 	}
 
-	cfgPath, err := path.SubscribedBangumiConfigFile(year, seasonID)
+	subscription, err := fetchSubscription(client, year, seasonID)
 	if err != nil {
-		console.Errorf("读取本地番剧配置文件错误:%s", err)
-		log.Errorf("error getting subscribed bangumi config file path:%s", err)
+		console.Errorf("读取 mikan 用户订阅的番剧列表(year=%d,seasonID=%d)错误:%s", year, seasonID, err)
 		return
 	}
 
-	var list []mikan.BangumiBase
-	if err := path.ReadJSONConfigFile(cfgPath, &list); err != nil {
-		if !os.IsNotExist(err) {
-			log.Fatalf("read config file error: %s", err)
+	fn, err := path.SubscriptionConfigFile(year, seasonID)
+	if err != nil {
+		console.Errorf("获取本地番剧订阅配置文件错误:%s", err)
+		return
+	}
+
+	var localSubscription []mikan.BangumiBase
+	if err := path.ReadJSONConfigFile(fn, &localSubscription); err != nil && !os.IsNotExist(err) {
+		console.Errorf("读取本地番剧订阅配置文件错误:%s", err)
+		return
+	}
+
+	if localSubscription == nil {
+		localSubscription = subscription
+		subscribe(client, localSubscription)
+	} else {
+		localSubscription = sync(client, localSubscription, subscription)
+	}
+
+	err = saveSubscriptionConfig(fn, localSubscription)
+	if err != nil {
+		console.Errorf("保存番剧订阅配置文件错误:%s", err)
+	}
+
+	console.Successf("订阅任务结束")
+}
+
+func sync(client *mikan.Client, local, remote []mikan.BangumiBase) []mikan.BangumiBase {
+	var added []mikan.BangumiBase   // subscribed on mikan but does not exist locally
+	var removed []mikan.BangumiBase // removed on mikan but appears locally
+
+	localSet := libs.NewSet[string]()
+	remoteSet := libs.NewSet[string]()
+
+	for _, item := range remote {
+		remoteSet.Add(item.ID)
+	}
+	for _, item := range local {
+		localSet.Add(item.ID)
+	}
+
+	for _, item := range remote {
+		if !localSet.Contains(item.ID) {
+			added = append(added, item)
 		}
 	}
 
-	if list == nil {
-		console.Infof("本地暂无番剧订阅记录, 从mikan抓取用户订阅列表...")
-		list, err = fetchSubscribedBangumi(client, cfgPath, year, seasonID)
-		if err != nil {
-			log.Fatalf("fetch mikan user subscribed bangumi list error: %s", err)
+	for _, item := range local {
+		if !remoteSet.Contains(item.ID) {
+			removed = append(removed, item)
 		}
 	}
 
-	for _, item := range list {
-		err = processBangumi(client, item)
-		if err != nil {
-			console.Errorf("处理 %s 失败: %s", item.Name, err)
-		}
+	if len(added) == 0 && len(removed) == 0 {
+		console.Infof("本地订阅列表与 mikan 一致，无需同步")
+		return local
+	}
 
+	if len(added) > 0 {
+		proceed := prompt.Confirm(fmt.Sprintf("有 %d 部新的番剧在 mikan 订阅, 是否要在本地订阅?", len(added)))
+		if proceed {
+			subscribe(client, added)
+			local = append(local, added...)
+		}
+	}
+
+	if len(removed) > 0 {
+		proceed := prompt.Confirm(fmt.Sprintf("有 %d 部番剧在 mikan 取消了订阅, 是否也要在本地取消订阅?", len(removed)))
+		if proceed {
+			local = libs.RemoveElements(local, removed)
+		}
+	}
+
+	console.Successf("本地订阅已和 mikan 订阅同步！")
+	return local
+}
+
+func subscribe(client *mikan.Client, data []mikan.BangumiBase) {
+	for _, item := range data {
+		if err := subscribeBangumi(client, item); err != nil {
+			console.Error("%s 订阅错误:%s", item.Name, err)
+		}
 		console.Successf("%s 订阅成功!", item.Name)
 	}
 }
 
-// config exists
-func update() {
-
-}
-
-// config not exist, subscribe
-func subscribe() {
-
-}
-
-func fetchSubscribedBangumi(client *mikan.Client, cfgPath string, year int, seasonID season.ID) ([]mikan.BangumiBase, error) {
+func fetchSubscription(client *mikan.Client, year int, seasonID season.ID) ([]mikan.BangumiBase, error) {
 	s, err := seasonID.Season()
 	if err != nil {
 		return nil, err
@@ -104,15 +141,10 @@ func fetchSubscribedBangumi(client *mikan.Client, cfgPath string, year int, seas
 		console.Infof("%s", item.Name)
 	}
 
-	err = path.SaveJSONConfigFile(cfgPath, list)
-	if err != nil {
-		return nil, err
-	}
-
 	return list, nil
 }
 
-func processBangumi(client *mikan.Client, bangumiBase mikan.BangumiBase) error {
+func subscribeBangumi(client *mikan.Client, bangumiBase mikan.BangumiBase) error {
 	id := bangumiBase.ID
 	console.Infof("开始解析番剧:%s, id:%s", bangumiBase.Name, id)
 
@@ -209,6 +241,13 @@ func createBangumiDir(bangumi mikan.Bangumi) error {
 		return fmt.Errorf("failed to create bangumi folder: %s", err)
 	}
 
+	return nil
+}
+
+func saveSubscriptionConfig(fn string, data []mikan.BangumiBase) error {
+	if err := path.SaveJSONConfigFile(fn, data); err != nil {
+		return err
+	}
 	return nil
 }
 
