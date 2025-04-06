@@ -97,6 +97,12 @@ func sync(client *mikan.Client, local, remote []mikan.BangumiBase) []mikan.Bangu
 		proceed := prompt.Confirm(fmt.Sprintf("有 %d 部番剧在 mikan 取消了订阅, 是否也要在本地取消订阅?", len(removed)))
 		if proceed {
 			local = libs.RemoveElements(local, removed)
+
+			for _, item := range removed {
+				if err := path.DeleteJSONConfigFile(item.ConfigFileName()); err != nil {
+					console.Errorf("取消订阅:%s 错误:%s", item.Name, err)
+				}
+			}
 		}
 	}
 

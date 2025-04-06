@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/sstp105/bangumi-cli/internal/command/subscribe"
-	season "github.com/sstp105/bangumi-cli/internal/season"
+	"github.com/sstp105/bangumi-cli/internal/season"
 	"time"
 )
 

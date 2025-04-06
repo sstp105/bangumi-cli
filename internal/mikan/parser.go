@@ -20,6 +20,10 @@ type BangumiBase struct {
 	Link string `json:"link"`
 }
 
+func (b BangumiBase) ConfigFileName() string {
+	return fmt.Sprintf("%s.json", b.ID)
+}
+
 func (b BangumiBase) String() string {
 	return fmt.Sprintf("ID:%s, Name:%s, Link:%s\n", b.ID, b.Name, b.Link)
 }

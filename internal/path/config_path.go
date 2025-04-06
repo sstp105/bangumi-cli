@@ -77,6 +77,15 @@ func ReadJSONConfigFile(fn string, v any) error {
 	return nil
 }
 
+func DeleteJSONConfigFile(fn string) error {
+	path, err := configPath(fn)
+	if err != nil {
+		return err
+	}
+
+	return os.Remove(path)
+}
+
 func SubscriptionConfigFile(year int, seasonID season.ID) (string, error) {
 	_, err := seasonID.Season()
 	if err != nil {
