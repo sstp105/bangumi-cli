@@ -10,6 +10,7 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/parser"
 	"github.com/sstp105/bangumi-cli/internal/path"
 	"github.com/sstp105/bangumi-cli/internal/prompt"
+	"github.com/sstp105/bangumi-cli/internal/season"
 	"os"
 	"path/filepath"
 )
@@ -25,7 +26,7 @@ If a subscribed bangumi config already exists, it fetches the latest subscribed 
 compares it with the local config, and prompts the user to add any new bangumi.
 If a bangumi is no longer present on Mikan, it prompts the user to confirm whether to unsubscribe it locally.
 */
-func Run() {
+func Run(year int, seasonID season.ID) {
 	client, err := mikan.NewClient(config.MikanClientConfig())
 	if err != nil {
 		log.Fatalf("error creating mikan client:%s", err)
@@ -40,7 +41,7 @@ func Run() {
 
 	if list == nil {
 		console.Infof("本地暂无番剧订阅记录, 从mikan抓取用户订阅列表...")
-		list, err = fetchSubscribedBangumi(client)
+		list, err = fetchSubscribedBangumi(client, year, seasonID)
 		if err != nil {
 			log.Fatalf("fetch mikan user subscribed bangumi list error: %s", err)
 		}
@@ -56,8 +57,25 @@ func Run() {
 	}
 }
 
-func fetchSubscribedBangumi(client *mikan.Client) ([]mikan.BangumiBase, error) {
-	resp, err := client.GetMyBangumi()
+// config exists
+func update() {
+
+}
+
+// config not exist, subscribe
+func subscribe() {
+
+}
+
+func fetchSubscribedBangumi(client *mikan.Client, year int, seasonID season.ID) ([]mikan.BangumiBase, error) {
+	s, err := seasonID.Season()
+	if err != nil {
+		return nil, err
+	}
+
+	console.Infof("抓取 mikan %d %s 用户订阅番剧列表...", year, s.String())
+
+	resp, err := client.GetMyBangumi(mikan.WithYearAndSeason(year, s))
 	if err != nil {
 		return nil, err
 	}

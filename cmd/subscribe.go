@@ -3,7 +3,12 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/sstp105/bangumi-cli/internal/command/subscribe"
+	season "github.com/sstp105/bangumi-cli/internal/season"
+	"time"
 )
+
+var year int
+var seasonID int
 
 var subscribeCmd = &cobra.Command{
 	Use:   "subscribe",
@@ -16,14 +21,24 @@ Summary:
   如果某部番剧已从 Mikan 上移除，则会提示用户是否取消订阅该番剧。
 `,
 	Example: `
-  bangumi subscribe 默认将读取 Mikan 最近显示的季度订阅列表。
-  bangumi subscribe --season spring --year 2025 指定读取 2025 年，春季番剧订阅列表。
+  bangumi subscribe 默认将使用当前年份和季度。
+  bangumi subscribe --season 2 --year 2025 指定读取 2025 年，春季番剧订阅列表。
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		subscribe.Run()
+		subscribe.Run(year, season.ID(seasonID))
 	},
 }
 
 func init() {
+	defaultYear := time.Now().Year()
+	defaultSeasonID := season.Now().ID()
+
+	subscribeCmd.Flags().IntVarP(&year, "year", "y", defaultYear, "选择指定年的番剧订阅列表")
+	subscribeCmd.Flags().IntVarP(
+		&seasonID,
+		"season",
+		"s", int(defaultSeasonID),
+		"选择指定季度的番剧订阅列表, 可选值为：1, 2, 3, 4，分别对应 冬,春,夏,秋")
+
 	rootCmd.AddCommand(subscribeCmd)
 }

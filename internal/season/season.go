@@ -26,5 +26,23 @@ func Now() Season {
 	case time.October, time.November, time.December:
 		return Autumn
 	}
-	return Spring // unreachable
+	return ""
+}
+
+func (s Season) ID() ID {
+	switch s {
+	case Winter:
+		return 1
+	case Spring:
+		return 2
+	case Summer:
+		return 3
+	case Autumn:
+		return 4
+	}
+	return -1
+}
+
+func (s Season) String() string {
+	return string(s)
 }
