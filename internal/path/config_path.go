@@ -2,7 +2,9 @@ package path
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/libs"
+	"github.com/sstp105/bangumi-cli/internal/season"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -73,6 +75,15 @@ func ReadJSONConfigFile(fn string, v any) error {
 	}
 
 	return nil
+}
+
+func SubscribedBangumiConfigFile(year int, seasonID season.ID) (string, error) {
+	_, err := seasonID.Season()
+	if err != nil {
+		return "", fmt.Errorf("seasonID.Season() failed: %v", err)
+	}
+
+	return fmt.Sprintf("%d-%d.json", year, seasonID), nil
 }
 
 func configPath(fn string) (string, error) {

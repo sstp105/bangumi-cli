@@ -32,8 +32,13 @@ func Run(year int, seasonID season.ID) {
 		log.Fatalf("error creating mikan client:%s", err)
 	}
 
+	cfgPath, err := path.SubscribedBangumiConfigFile(year, seasonID)
+	if err != nil {
+		log.Fatalf("error getting subscribed bangumi config file path:%s", err)
+	}
+
 	var list []mikan.BangumiBase
-	if err := path.ReadJSONConfigFile(path.SubscribedBangumiConfigFile, &list); err != nil {
+	if err := path.ReadJSONConfigFile(cfgPath, &list); err != nil {
 		if !os.IsNotExist(err) {
 			log.Fatalf("read config file error: %s", err)
 		}
@@ -41,7 +46,7 @@ func Run(year int, seasonID season.ID) {
 
 	if list == nil {
 		console.Infof("本地暂无番剧订阅记录, 从mikan抓取用户订阅列表...")
-		list, err = fetchSubscribedBangumi(client, year, seasonID)
+		list, err = fetchSubscribedBangumi(client, cfgPath, year, seasonID)
 		if err != nil {
 			log.Fatalf("fetch mikan user subscribed bangumi list error: %s", err)
 		}
@@ -67,7 +72,7 @@ func subscribe() {
 
 }
 
-func fetchSubscribedBangumi(client *mikan.Client, year int, seasonID season.ID) ([]mikan.BangumiBase, error) {
+func fetchSubscribedBangumi(client *mikan.Client, cfgPath string, year int, seasonID season.ID) ([]mikan.BangumiBase, error) {
 	s, err := seasonID.Season()
 	if err != nil {
 		return nil, err
@@ -95,7 +100,7 @@ func fetchSubscribedBangumi(client *mikan.Client, year int, seasonID season.ID) 
 		console.Infof("%s", item.Name)
 	}
 
-	err = path.SaveJSONConfigFile(path.SubscribedBangumiConfigFile, list)
+	err = path.SaveJSONConfigFile(cfgPath, list)
 	if err != nil {
 		return nil, err
 	}
