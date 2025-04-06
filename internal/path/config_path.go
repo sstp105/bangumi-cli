@@ -2,12 +2,16 @@ package path
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/libs"
-	"github.com/sstp105/bangumi-cli/internal/season"
 	"os"
 	"path/filepath"
 	"runtime"
+)
+
+const (
+	BangumiCredentialConfigFile = "bangumi_creds.json"
+
+	SubscriptionConfigFile = "subscriptions.json"
 )
 
 // ConfigPath returns the Windows path to the app's config directory in %AppData%\{APP_NAME}.
@@ -84,15 +88,6 @@ func DeleteJSONConfigFile(fn string) error {
 	}
 
 	return os.Remove(path)
-}
-
-func SubscriptionConfigFile(year int, seasonID season.ID) (string, error) {
-	_, err := seasonID.Season()
-	if err != nil {
-		return "", fmt.Errorf("seasonID.Season() failed: %v", err)
-	}
-
-	return fmt.Sprintf("%d-%d.json", year, seasonID), nil
 }
 
 func configPath(fn string) (string, error) {

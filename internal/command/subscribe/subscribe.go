@@ -27,14 +27,8 @@ func Run(year int, seasonID season.ID) {
 		return
 	}
 
-	fn, err := path.SubscriptionConfigFile(year, seasonID)
-	if err != nil {
-		console.Errorf("获取本地番剧订阅配置文件错误:%s", err)
-		return
-	}
-
 	var localSubscription []mikan.BangumiBase
-	if err := path.ReadJSONConfigFile(fn, &localSubscription); err != nil && !os.IsNotExist(err) {
+	if err := path.ReadJSONConfigFile(path.SubscriptionConfigFile, &localSubscription); err != nil && !os.IsNotExist(err) {
 		console.Errorf("读取本地番剧订阅配置文件错误:%s", err)
 		return
 	}
@@ -46,7 +40,7 @@ func Run(year int, seasonID season.ID) {
 		localSubscription = sync(client, localSubscription, subscription)
 	}
 
-	err = saveSubscriptionConfig(fn, localSubscription)
+	err = saveSubscriptionConfig(localSubscription)
 	if err != nil {
 		console.Errorf("保存番剧订阅配置文件错误:%s", err)
 	}
@@ -250,8 +244,8 @@ func createBangumiDir(bangumi mikan.Bangumi) error {
 	return nil
 }
 
-func saveSubscriptionConfig(fn string, data []mikan.BangumiBase) error {
-	if err := path.SaveJSONConfigFile(fn, data); err != nil {
+func saveSubscriptionConfig(data []mikan.BangumiBase) error {
+	if err := path.SaveJSONConfigFile(path.SubscriptionConfigFile, data); err != nil {
 		return err
 	}
 	return nil
