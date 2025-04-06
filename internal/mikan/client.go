@@ -1,6 +1,7 @@
 package mikan
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"github.com/go-resty/resty/v2"
@@ -112,14 +113,14 @@ func (c *Client) GetBangumi(id string) (string, error) {
 func (c *Client) ReadRSS(url string) (*RSS, error) {
 	resp, err := c.client.R().Get(url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch rss: %w", err)
 	}
 
 	var rss RSS
-	decoder := xml.NewDecoder(resp.RawBody())
+	decoder := xml.NewDecoder(bytes.NewReader(resp.Body()))
 	err = decoder.Decode(&rss)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode rss: %w", err)
 	}
 
 	return &rss, nil
