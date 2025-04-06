@@ -50,6 +50,9 @@ bangumi login
 # 订阅 Mikan 最新季度动画（解析、生成元数据、预下载准备）
 bangumi subscribe
 
+# 查询 Mikan 订阅的 RSS 是否有新的种子
+bangumi update
+
 # 批量处理 RSS，并将下载任务发送到 qBitTorrent 队列
 bangumi download
 
@@ -64,4 +67,7 @@ bangumi collect
 
 # 取消订阅动画
 bangumi unsubscribe
+
+# 查询 debug 日志
+bangumi log 
 ```
