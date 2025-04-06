@@ -29,12 +29,16 @@ If a bangumi is no longer present on Mikan, it prompts the user to confirm wheth
 func Run(year int, seasonID season.ID) {
 	client, err := mikan.NewClient(config.MikanClientConfig())
 	if err != nil {
-		log.Fatalf("error creating mikan client:%s", err)
+		console.Errorf("初始化mikan客户端错误:%s", err)
+		log.Errorf("error creating mikan client:%s", err)
+		return
 	}
 
 	cfgPath, err := path.SubscribedBangumiConfigFile(year, seasonID)
 	if err != nil {
-		log.Fatalf("error getting subscribed bangumi config file path:%s", err)
+		console.Errorf("读取本地番剧配置文件错误:%s", err)
+		log.Errorf("error getting subscribed bangumi config file path:%s", err)
+		return
 	}
 
 	var list []mikan.BangumiBase
