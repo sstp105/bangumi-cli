@@ -109,10 +109,6 @@ func init() {
 	rootCmd.AddCommand(subscribeCmd)
 }
 
-func init() {
-	rootCmd.AddCommand(loginCmd)
-}
-
 //func fetchSubscribedBangumi(client *mikan.Client) ([]mikan.BangumiBase, error) {
 //	html, err := client.GetMyBangumi()
 //	if err != nil {

@@ -6,8 +6,7 @@ import (
 )
 
 var loginCmd = &cobra.Command{
-	Use:   "login",
-	Short: "验证用户 Bangumi 凭证并授权获取 Bangumi API 访问令牌。",
+	Use: "login",
 	Run: func(cmd *cobra.Command, args []string) {
 		login.Handler()
 	},
