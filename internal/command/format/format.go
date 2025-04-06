@@ -1,45 +1,24 @@
-package cmd
+package format
 
 import (
 	"fmt"
+	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/libs"
+	"github.com/sstp105/bangumi-cli/internal/mediafmt"
 	"github.com/sstp105/bangumi-cli/internal/prompt"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
-
-	"github.com/spf13/cobra"
-	"github.com/sstp105/bangumi-cli/internal/mediafmt"
 )
 
 var videoFormats []string = []string{".mp4", ".mkv", ".flac"}
 var fmtter mediafmt.MediaFormatter = mediafmt.TVShowFormatter{}
 
-var renameCmd = &cobra.Command{
-	Use:   "rename",
-	Short: "Rename video files in the current and sub directories",
-	Long: `The 'rename' command will rename video files in the current directory by appending the title, season, and episode number to each file name. 
-	It will process files with common media formats (e.g., .mp4, .mkv) and recursively handle subdirectories. 
-	Currently only supports Plex media content formats.
-	The season and episode numbering will be determined based on the folder's name, and the files will be renamed accordingly.
-	If the folder contains the season in custom format, e.g. 夏目友人帐 柒, which represents season 7, it's recommended to rename the folder to
-	夏目友人帐 柒 - S07, 夏目友人帐 柒 第七季, or 夏目友人帐 第七期.
-	Other examples: 东京喰种√A, CLANNAD 〜AFTER STORY〜, Code Geass 反叛的鲁路修R2.
-	`,
-	Run: func(cmd *cobra.Command, args []string) {
-		handler()
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(renameCmd)
-}
-
-func handler() {
+func Run() {
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Fatal("error getting current working directory:", err)
+		console.Errorf("获取当前工作目录路径错误: %v", err)
+		return
 	}
 
 	traverse(wd)
@@ -54,7 +33,6 @@ func traverse(dir string) {
 
 	process(dir)
 
-	// recursively process sub-directories
 	for _, entry := range entries {
 		if entry.IsDir() {
 			subdir := filepath.Join(dir, entry.Name())
