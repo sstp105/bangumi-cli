@@ -1,7 +1,6 @@
 package subscribe
 
 import (
-	"errors"
 	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/config"
 	"github.com/sstp105/bangumi-cli/internal/console"
@@ -15,7 +14,18 @@ import (
 	"path/filepath"
 )
 
-func Handler() {
+/*
+Run will perform the following tasks:
+
+If no subscribed bangumi config is found locally, it fetches the user's subscribed bangumi list from Mikan, parses and saves the config.
+For each bangumi, it requests the corresponding Mikan bangumi page, parses the bangumi.tv ID and the user-subscribed fan-sub RSS link,
+prompts the user to filter desired torrent files, and stores the config locally for further processing.
+
+If a subscribed bangumi config already exists, it fetches the latest subscribed list from Mikan,
+compares it with the local config, and prompts the user to add any new bangumi.
+If a bangumi is no longer present on Mikan, it prompts the user to confirm whether to unsubscribe it locally.
+*/
+func Run() {
 	client, err := mikan.NewClient(config.MikanClientConfig())
 	if err != nil {
 		log.Fatalf("error creating mikan client:%s", err)
@@ -29,7 +39,7 @@ func Handler() {
 	}
 
 	if list == nil {
-		console.Infof("本地暂无新番订阅记录, 准备从mikan抓取订阅列表")
+		console.Infof("本地暂无番剧订阅记录, 从mikan抓取用户订阅列表...")
 		list, err = fetchSubscribedBangumi(client)
 		if err != nil {
 			log.Fatalf("fetch mikan user subscribed bangumi list error: %s", err)
@@ -39,8 +49,10 @@ func Handler() {
 	for _, item := range list {
 		err = processBangumi(client, item)
 		if err != nil {
-			console.Errorf("解析 %s 失败: %s", item.Name, err)
+			console.Errorf("处理 %s 失败: %s", item.Name, err)
 		}
+
+		console.Successf("%s 订阅成功!", item.Name)
 	}
 }
 
@@ -60,7 +72,7 @@ func fetchSubscribedBangumi(client *mikan.Client) ([]mikan.BangumiBase, error) {
 		return nil, err
 	}
 
-	console.Infof("成功解析用户订阅的番剧列表:")
+	console.Success("成功解析用户订阅的番剧列表:")
 	for _, item := range list {
 		console.Infof("%s", item.Name)
 	}
@@ -127,7 +139,7 @@ func processBangumi(client *mikan.Client, bangumiBase mikan.BangumiBase) error {
 }
 
 func filterTorrents(rss mikan.RSS) ([]string, error) {
-	console.Info("当前订阅的RSS包含以下结果: ")
+	console.Info("当前订阅的RSS包含以下结果:")
 	for _, item := range rss.Channel.Items {
 		console.Info(item.Title)
 	}
@@ -146,9 +158,9 @@ func filterTorrents(rss mikan.RSS) ([]string, error) {
 		console.Info(item.Title)
 	}
 
-	proceed := prompt.Confirm("是否要保存该订阅? (y/n)")
+	proceed := prompt.Confirm("是否要保存该订阅? (按 n 取消, 任意键继续)")
 	if !proceed {
-		return nil, errors.New("user aborted")
+		return nil, nil
 	}
 
 	var torrents []string

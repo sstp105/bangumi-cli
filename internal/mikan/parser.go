@@ -3,7 +3,6 @@ package mikan
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/parser"
 	htmlutil "html"
 )
@@ -81,7 +80,6 @@ func ParseBangumiID(doc *goquery.Document) (string, error) {
 
 		id, err := parser.ParseSuffixID(href)
 		if err != nil {
-			log.Errorf("failed to parse bangumi id %s", href)
 			return
 		}
 
