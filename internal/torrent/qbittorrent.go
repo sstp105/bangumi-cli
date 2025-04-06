@@ -2,17 +2,18 @@ package torrent
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/sstp105/bangumi-cli/internal/libs"
-	"net/http"
 )
 
 const (
 	QBittorrentClientName = "qbittorrent"
 
-	QBittorrentAuthCookieName = "Set-Cookie"
+	QBittorrentAuthCookieName = "SID"
 
-	QBittorrentAPIAddPath   = "/api/torrents/add"
+	QBittorrentAPIAddPath   = "/api/v2/torrents/add"
 	QBittorrentAPILoginPath = "/api/v2/auth/login"
 )
 
@@ -73,7 +74,7 @@ func (q *QBittorrentClient) Add(link string) error {
 			"paused": "true", // TODO: decouple as option (from caller) later
 		}).
 		SetCookie(&http.Cookie{
-			Name:  "SID",
+			Name:  QBittorrentAuthCookieName,
 			Value: q.cookie,
 		}).
 		Post(QBittorrentAPIAddPath)
@@ -118,7 +119,9 @@ func loginQbittorrent(client *resty.Client, cfg QbittorrentClientConfig) (string
 		SetFormData(map[string]string{
 			"username": cfg.Username,
 			"password": cfg.Password,
-		}).Post(QBittorrentAPILoginPath)
+		}).
+		SetHeader("Referer", client.BaseURL).
+		Post(QBittorrentAPILoginPath)
 
 	if err != nil {
 		return "", fmt.Errorf("login qbittorrent client error:%s", err)
