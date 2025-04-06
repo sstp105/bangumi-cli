@@ -1,10 +1,10 @@
 # bangumi-cli
 
-一套管理季度动画收藏和媒体流相关任务的 CLI 工具（开发中 🚧）。
+一套管理季度动画收藏和媒体流相关任务的 CLI 工具。
 
 ## 本地运行 & 构建
 
-如果你希望在本地构建二进制文件，请先在项目根目录下创建 `.env` 文件：
+请先在项目根目录下创建 `.env` 文件：
 
 ```sh
 cd bangumi-cli
@@ -19,7 +19,6 @@ QBITTORRENT_PORT=8080
 QBITTORRENT_USER_NAME=admin
 QBITTORRENT_PASSWORD=<>
 MIKAN_IDENTITY_COOKIE=<>
-
 ```
 
 根据你的系统使用对应的命令来编译：
@@ -60,7 +59,7 @@ bangumi group
 # 递归格式化文件，使其符合 Plex / Jellyfin / Emby 媒体流格式
 bangumi format
 
-# 收集已整理的动画数据
+# 收集已整理的动画数据 (批量收藏bangumi.tv条目、 同步mikan订阅列表)
 bangumi collect
 
 # 取消订阅动画
