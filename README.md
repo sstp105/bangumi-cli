@@ -56,7 +56,7 @@ bangumi update
 # 批量处理 RSS，并将下载任务发送到 qBitTorrent 队列
 bangumi download
 
-# 将已下载的文件移动到目标文件夹
+# 将已下载的文件移动到匹配的目标文件夹
 bangumi group
 
 # 递归格式化文件，使其符合 Plex / Jellyfin / Emby 媒体流格式

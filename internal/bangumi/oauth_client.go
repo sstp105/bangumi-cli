@@ -99,7 +99,7 @@ func (o *OAuthClient) requestOAuthToken(grantType, clientID, clientSecret, redir
 		"client_secret": clientSecret,
 		"redirect_uri":  redirectURI,
 	}
-	
+
 	if grantType == "authorization_code" {
 		data["code"] = codeOrRefreshToken
 	} else if grantType == "refresh_token" {

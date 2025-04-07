@@ -18,19 +18,19 @@ var (
 )
 
 func Infof(format string, args ...interface{}) {
-	fmt.Printf(infoF(format, args...) + "\n")
+	fmt.Println(infoF(format, args...))
 }
 
 func Successf(format string, args ...interface{}) {
-	fmt.Printf(successF(format, args...) + "\n")
+	fmt.Println(successF(format, args...))
 }
 
 func Warningf(format string, args ...interface{}) {
-	fmt.Printf(warningF(format, args...) + "\n")
+	fmt.Println(warningF(format, args...))
 }
 
 func Errorf(format string, args ...interface{}) {
-	fmt.Printf(failureF(format, args...) + "\n")
+	fmt.Println(failureF(format, args...))
 }
 
 func Info(format string, args ...interface{}) {
