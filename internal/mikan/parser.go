@@ -5,6 +5,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sstp105/bangumi-cli/internal/parser"
 	htmlutil "html"
+	"strings"
 )
 
 // BangumiBase represents the basic information about a Mikan bangumi.
@@ -28,6 +29,10 @@ func (b BangumiBase) String() string {
 	return fmt.Sprintf("ID:%s, Name:%s, Link:%s\n", b.ID, b.Name, b.Link)
 }
 
+func (b BangumiBase) SavePath() string {
+	return fmt.Sprintf("/%s", b.Name)
+}
+
 // Bangumi represents detailed information about a Mikan bangumi
 type Bangumi struct {
 	BangumiBase
@@ -43,6 +48,14 @@ type Bangumi struct {
 
 	// Filters holds user configured Filters.
 	Filters Filters `json:"filters"`
+}
+
+func (b Bangumi) TorrentURLs() string {
+	var builder strings.Builder
+	for _, t := range b.Torrents {
+		builder.WriteString(t + "\n")
+	}
+	return builder.String()
 }
 
 // Filters represents the filter settings for including or excluding specific content from the rss.

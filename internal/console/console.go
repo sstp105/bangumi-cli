@@ -6,16 +6,22 @@ import (
 )
 
 var (
-	info    = color.New(color.FgCyan).SprintfFunc()
-	success = color.New(color.FgGreen).SprintfFunc()
-	warning = color.New(color.FgYellow).SprintfFunc()
-	failure = color.New(color.FgRed).SprintfFunc()
+	plain   = color.New(color.FgWhite).SprintFunc()
+	info    = color.New(color.FgCyan).SprintFunc()
+	success = color.New(color.FgGreen).SprintFunc()
+	warning = color.New(color.FgYellow).SprintFunc()
+	failure = color.New(color.FgRed).SprintFunc()
 
+	plainF   = color.New(color.FgWhite).SprintfFunc()
 	infoF    = color.New(color.FgCyan).SprintfFunc()
 	successF = color.New(color.FgGreen).SprintfFunc()
 	warningF = color.New(color.FgYellow).SprintfFunc()
 	failureF = color.New(color.FgRed).SprintfFunc()
 )
+
+func Plainf(format string, args ...interface{}) {
+	fmt.Println(plainF(format, args...))
+}
 
 func Infof(format string, args ...interface{}) {
 	fmt.Println(infoF(format, args...))
@@ -33,18 +39,22 @@ func Errorf(format string, args ...interface{}) {
 	fmt.Println(failureF(format, args...))
 }
 
-func Info(format string, args ...interface{}) {
-	fmt.Print(infoF(format, args...) + "\n")
+func Plain(args ...interface{}) {
+	fmt.Print(plain(args...) + "\n")
 }
 
-func Success(format string, args ...interface{}) {
-	fmt.Print(successF(format, args...) + "\n")
+func Info(args ...interface{}) {
+	fmt.Print(info(args...) + "\n")
 }
 
-func Warning(format string, args ...interface{}) {
-	fmt.Print(warningF(format, args...) + "\n")
+func Success(args ...interface{}) {
+	fmt.Print(success(args...) + "\n")
 }
 
-func Error(format string, args ...interface{}) {
-	fmt.Print(failureF(format, args...) + "\n")
+func Warning(args ...interface{}) {
+	fmt.Print(warning(args...) + "\n")
+}
+
+func Error(args ...interface{}) {
+	fmt.Print(failure(args...) + "\n")
 }

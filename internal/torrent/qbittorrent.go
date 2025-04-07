@@ -67,11 +67,12 @@ func NewQBittorrentClient(cfg QbittorrentClientConfig) (*QBittorrentClient, erro
 }
 
 // Add sends a request to the qBittorrent client to add a torrent using the provided magnet link or torrent URL.
-func (q *QBittorrentClient) Add(link string) error {
+func (q *QBittorrentClient) Add(urls string, dest string) error {
 	resp, err := q.client.R().
 		SetFormData(map[string]string{
-			"urls":   link,
-			"paused": "true", // TODO: decouple as option (from caller) later
+			"urls":     urls,
+			"savepath": dest,
+			"paused":   "true",
 		}).
 		SetCookie(&http.Cookie{
 			Name:  QBittorrentAuthCookieName,
