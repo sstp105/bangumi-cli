@@ -186,10 +186,6 @@ func subscribeBangumi(client *mikan.Client, bangumiBase mikan.BangumiBase) error
 		Filters:     mikan.Filters{},
 	}
 
-	if err := createBangumiDir(bangumi); err != nil {
-		return fmt.Errorf("error creating bangumi dir: %s", err)
-	}
-
 	if err := saveBangumiConfig(bangumi); err != nil {
 		return fmt.Errorf("error saving bangumi config: %s", err)
 	}
