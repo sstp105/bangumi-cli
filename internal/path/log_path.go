@@ -51,3 +51,17 @@ func (m MacOSPath) LogPath() (string, error) {
 	}
 	return filepath.Join(dir, "Library", "Logs", AppDir), nil
 }
+
+func ReadLogFile(fn string) (string, error) {
+	path, err := LogPath(fn)
+	if err != nil {
+		return "", err
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
+}
