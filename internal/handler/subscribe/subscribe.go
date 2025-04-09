@@ -2,6 +2,7 @@ package subscribe
 
 import (
 	"fmt"
+	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/config"
 	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/libs"
@@ -21,6 +22,8 @@ func Run(year int, seasonID season.ID) {
 		return
 	}
 
+	bangumiClient := bangumi.NewClient()
+
 	subscription, err := fetchSubscription(client, year, seasonID)
 	if err != nil {
 		console.Errorf("读取 mikan 用户订阅的番剧列表(year=%d,seasonID=%d)错误:%s", year, seasonID, err)
@@ -35,9 +38,9 @@ func Run(year int, seasonID season.ID) {
 
 	if localSubscription == nil {
 		localSubscription = subscription
-		subscribe(client, localSubscription)
+		subscribe(client, bangumiClient, localSubscription)
 	} else {
-		localSubscription = sync(client, localSubscription, subscription)
+		localSubscription = sync(client, bangumiClient, localSubscription, subscription)
 	}
 
 	err = saveSubscriptionConfig(localSubscription)
@@ -48,7 +51,7 @@ func Run(year int, seasonID season.ID) {
 	console.Successf("订阅任务结束")
 }
 
-func sync(client *mikan.Client, local, remote []mikan.BangumiBase) []mikan.BangumiBase {
+func sync(client *mikan.Client, bangumiClient *bangumi.Client, local, remote []mikan.BangumiBase) []mikan.BangumiBase {
 	var added []mikan.BangumiBase   // subscribed on mikan but does not exist locally
 	var removed []mikan.BangumiBase // removed on mikan but appears locally
 
@@ -82,7 +85,7 @@ func sync(client *mikan.Client, local, remote []mikan.BangumiBase) []mikan.Bangu
 	if len(added) > 0 {
 		proceed := prompt.Confirm(fmt.Sprintf("有 %d 部新的番剧在 mikan 订阅, 是否要在本地订阅?", len(added)))
 		if proceed {
-			subscribe(client, added)
+			subscribe(client, bangumiClient, added)
 			local = append(local, added...)
 		}
 	}
@@ -104,9 +107,9 @@ func sync(client *mikan.Client, local, remote []mikan.BangumiBase) []mikan.Bangu
 	return local
 }
 
-func subscribe(client *mikan.Client, data []mikan.BangumiBase) {
+func subscribe(client *mikan.Client, bangumiClient *bangumi.Client, data []mikan.BangumiBase) {
 	for _, item := range data {
-		if err := subscribeBangumi(client, item); err != nil {
+		if err := subscribeBangumi(client, bangumiClient, item); err != nil {
 			console.Error("%s 订阅错误:%s", item.Name, err)
 		}
 		console.Successf("%s 订阅成功!", item.Name)
@@ -144,7 +147,7 @@ func fetchSubscription(client *mikan.Client, year int, seasonID season.ID) ([]mi
 	return list, nil
 }
 
-func subscribeBangumi(client *mikan.Client, bangumiBase mikan.BangumiBase) error {
+func subscribeBangumi(client *mikan.Client, bangumiClient *bangumi.Client, bangumiBase mikan.BangumiBase) error {
 	id := bangumiBase.ID
 	console.Infof("开始解析番剧:%s, id:%s", bangumiBase.Name, id)
 
@@ -161,6 +164,11 @@ func subscribeBangumi(client *mikan.Client, bangumiBase mikan.BangumiBase) error
 	bangumiID, err := mikan.ParseBangumiID(html)
 	if err != nil {
 		return fmt.Errorf("failed to parse mikan bangumi bangumi.tv id: %s", err)
+	}
+
+	episodes, err := bangumiClient.GetEpisodes(bangumiID)
+	if err != nil {
+		return err
 	}
 
 	rssLink, err := mikan.ParseSubscribedRSSLink(html)
@@ -184,6 +192,7 @@ func subscribeBangumi(client *mikan.Client, bangumiBase mikan.BangumiBase) error
 		RSSLink:     rssLink,
 		Torrents:    torrents,
 		Filters:     *filters,
+		Episodes:    episodes,
 	}
 
 	if err := saveBangumiConfig(bangumi); err != nil {

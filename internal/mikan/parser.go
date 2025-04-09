@@ -3,6 +3,7 @@ package mikan
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/parser"
 	htmlutil "html"
 	"strings"
@@ -48,6 +49,15 @@ type Bangumi struct {
 
 	// Filters holds user configured Filters.
 	Filters Filters `json:"filters"`
+
+	Episodes []bangumi.Episode `json:"episodes"`
+}
+
+func (b Bangumi) StartEpisode() int {
+	if len(b.Episodes) == 0 {
+		return 1
+	}
+	return b.Episodes[0].Sort
 }
 
 func (b Bangumi) TorrentURLs() string {

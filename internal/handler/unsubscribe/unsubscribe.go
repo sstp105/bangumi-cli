@@ -10,7 +10,9 @@ import (
 func Run(id int) {
 	if id == -1 {
 		removeAll()
+		return
 	}
+
 	remove(id)
 }
 

@@ -13,6 +13,8 @@ const (
 	// getUserCollectionsPath is path for fetching a user's collections.
 	getUserCollectionsPath libs.APIPath = "/v0/users/%s/collections"
 
+	getEpisodePath libs.APIPath = "/v0/episodes"
+
 	// postAccessToken is path for requesting bangumi access token
 	postAccessToken libs.APIPath = "/oauth/access_token"
 
@@ -28,8 +30,7 @@ var (
 	}
 )
 
-// UserSubjectCollectionResponse represents the response for fetching user subject collections.
-type UserSubjectCollectionResponse struct {
+type PaginationResponse struct {
 	// Total is the total number of subject collections available under the subject and collection type.
 	Total int `json:"total"`
 
@@ -38,6 +39,11 @@ type UserSubjectCollectionResponse struct {
 
 	// Offset is the current position for the returned items, used for pagination.
 	Offset int `json:"offset"`
+}
+
+// UserSubjectCollectionResponse represents the response for fetching user subject collections.
+type UserSubjectCollectionResponse struct {
+	PaginationResponse
 
 	// Data contains the list of UserSubjectCollection objects representing the user's subject collections.
 	Data []UserSubjectCollection `json:"data"`
@@ -59,6 +65,18 @@ type SlimSubject struct {
 
 	// NameCN is the name of the subject in Chinese (if available).
 	NameCN string `json:"name_cn"`
+}
+
+type EpisodesResponse struct {
+	PaginationResponse
+
+	Data []Episode `json:"data"`
+}
+
+type Episode struct {
+	Ep      int    `json:"ep"`
+	Sort    int    `json:"sort"`
+	AirDate string `json:"airdate"`
 }
 
 // ErrorResponse represents a generic API error response from the bangumi.
@@ -120,6 +138,16 @@ func (c *Client) GetUserCollections(username string, subjectType, collectionType
 	return collections, nil
 }
 
+func (c *Client) GetEpisodes(subjectID string) ([]Episode, error) {
+	return paginate(func(offset int) ([]Episode, int, error) {
+		resp, err := c.GetPaginatedEpisodes(subjectID, offset)
+		if err != nil {
+			return nil, 0, err
+		}
+		return resp.Data, resp.Total, nil
+	})
+}
+
 // GetPaginatedUserCollections fetches the paginated collections for a user from the bangumi API.
 //
 // Parameters:
@@ -157,4 +185,48 @@ func (c *Client) GetPaginatedUserCollections(username string, subjectType, colle
 	}
 
 	return &collections, nil
+}
+
+func (c *Client) GetPaginatedEpisodes(subjectID string, offset int) (*EpisodesResponse, error) {
+	var episodesResp EpisodesResponse
+	var errorResp ErrorResponse
+
+	params := map[string]string{
+		"subject_id": subjectID,
+		"type":       "0",
+		"limit":      fmt.Sprintf("%d", defaultPaginationLimit),
+		"offset":     fmt.Sprintf("%d", offset),
+	}
+	url := libs.FormatAPIPath(getEpisodePath)
+
+	resp, err := c.client.R().
+		SetQueryParams(params).
+		SetResult(&episodesResp).
+		SetError(&errorResp).
+		Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.IsError() {
+		return nil, &errorResp
+	}
+
+	return &episodesResp, nil
+}
+
+func paginate[T any](fetch func(offset int) ([]T, int, error)) ([]T, error) {
+	var result []T
+	total := 1
+
+	for offset := 0; offset < total; offset += defaultPaginationLimit {
+		data, pageTotal, err := fetch(offset)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, data...)
+		total = pageTotal
+	}
+
+	return result, nil
 }

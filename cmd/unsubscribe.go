@@ -24,7 +24,7 @@ Summary:
 }
 
 func init() {
-	unsubscribeCmd.Flags().IntP("id", "i", -1, "指定取消订阅的番剧 ID")
+	unsubscribeCmd.Flags().IntVarP(&id, "id", "i", -1, "指定取消订阅的番剧 ID")
 
 	rootCmd.AddCommand(unsubscribeCmd)
 }
