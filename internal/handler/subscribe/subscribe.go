@@ -173,7 +173,7 @@ func subscribeBangumi(client *mikan.Client, bangumiBase mikan.BangumiBase) error
 		return fmt.Errorf("error reading rss link %s: %s", rssLink, err)
 	}
 
-	torrents, err := filterTorrents(*rss)
+	torrents, filters, err := filterTorrents(*rss)
 	if err != nil {
 		return fmt.Errorf("error filtering bangumi torrents: %s", err)
 	}
@@ -183,7 +183,7 @@ func subscribeBangumi(client *mikan.Client, bangumiBase mikan.BangumiBase) error
 		BangumiID:   bangumiID,
 		RSSLink:     rssLink,
 		Torrents:    torrents,
-		Filters:     mikan.Filters{},
+		Filters:     *filters,
 	}
 
 	if err := saveBangumiConfig(bangumi); err != nil {
@@ -193,7 +193,7 @@ func subscribeBangumi(client *mikan.Client, bangumiBase mikan.BangumiBase) error
 	return nil
 }
 
-func filterTorrents(rss mikan.RSS) ([]string, error) {
+func filterTorrents(rss mikan.RSS) ([]string, *mikan.Filters, error) {
 	console.Info("当前订阅的RSS包含以下结果:")
 	for _, item := range rss.Channel.Items {
 		console.Info(item.Title)
@@ -215,14 +215,14 @@ func filterTorrents(rss mikan.RSS) ([]string, error) {
 
 	proceed := prompt.Confirm("是否要保存该订阅? (按 n 取消, 任意键继续)")
 	if !proceed {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	var torrents []string
 	for _, item := range filteredItems {
 		torrents = append(torrents, item.Enclosure.URL)
 	}
-	return torrents, nil
+	return torrents, &filters, nil
 }
 
 func createBangumiDir(bangumi mikan.Bangumi) error {
