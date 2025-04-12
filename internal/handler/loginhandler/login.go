@@ -1,4 +1,4 @@
-package login
+package loginhandler
 
 import (
 	"fmt"
@@ -10,17 +10,19 @@ import (
 
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/config"
-	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/server"
 )
 
-var ch = make(chan os.Signal, 1)
+var (
+	ch = make(chan os.Signal, 1)
 
-// Handler handles bangumi login process.
-func Handler() {
+	oauthURL libs.APIPath = "https://bgm.tv/oauth/authorize?client_id=%s&response_type=code&redirect_uri=%s"
+)
+
+// Run triggers bangumi login process.
+func Run() {
 	if err := authenticate(); err != nil {
 		console.Errorf("获取 bangumi 凭证失败:%s", err)
-		log.Fatalf("error authenticating user:%s", err)
 	}
 }
 
@@ -37,19 +39,14 @@ func authenticate() error {
 
 	switch {
 	case err != nil && os.IsNotExist(err):
-		log.Debugf("bangumi credential config is not found, authenticating user.")
 		credential, err = oauth()
 	case err != nil:
-		log.Errorf("error reading bangumi credential config:%s", err)
 		return err
 	case credential.IsExpired():
-		log.Debugf("Access token already expired, re-authenticating user.")
 		credential, err = oauth()
 	case credential.ShouldRefresh():
-		log.Debugf("Access token will expire soon, fetching new access token.")
 		credential, err = refresh(credential.RefreshToken)
 	default:
-		log.Debugf("Bangumi credential config is valid.")
 		overwrite = false
 	}
 
@@ -59,21 +56,21 @@ func authenticate() error {
 
 	if credential != nil && overwrite {
 		if err := path.SaveJSONConfigFile(path.BangumiCredentialConfigFile, credential); err != nil {
-			log.Fatalf("error saving bangumi credentials:%s", err)
+			return fmt.Errorf("error saving bangumi credential file:%s", err)
 		}
 	}
 
-	return credential.Print()
+	if err := credential.Print(); err != nil {
+		return fmt.Errorf("error printing bangumi credential:%s", err)
+	}
+
+	return nil
 }
 
-// oauth starts the local server and listens for bangumi callback
+// oauth starts a local server and listens for bangumi callback
 // If the authentication succeeds, a bangumi credential will be returned.
 func oauth() (*bangumi.OAuthCredential, error) {
-	log.Info("Opening URL in the browser for bangumi.tv authentication...")
-
-	clientID := config.BangumiClientID()
-	url := fmt.Sprintf("https://bgm.tv/oauth/authorize?client_id=%s&response_type=code&redirect_uri=%s", clientID, config.LocalServerAddress())
-
+	url := libs.FormatAPIPath(oauthURL, config.BangumiClientID(), config.LocalServerAddress())
 	if err := libs.OpenBrowser(url); err != nil {
 		return nil, err
 	}
@@ -92,7 +89,7 @@ func oauth() (*bangumi.OAuthCredential, error) {
 	return credential, nil
 }
 
-// refresh uses token to request new bangumi access token.
+// refresh uses refresh token to request new access token.
 func refresh(token string) (*bangumi.OAuthCredential, error) {
 	client := bangumi.NewOAuthClient()
 	credential, err := client.RefreshAccessToken(
