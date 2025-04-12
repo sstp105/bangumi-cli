@@ -14,21 +14,10 @@ const (
 
 // Now returns the current season.
 func Now() Season {
-	month := time.Now().Month()
-
-	switch month {
-	case time.January, time.February, time.March:
-		return Winter
-	case time.April, time.May, time.June:
-		return Spring
-	case time.July, time.August, time.September:
-		return Summer
-	case time.October, time.November, time.December:
-		return Autumn
-	}
-	return ""
+	return nowAt(time.Now())
 }
 
+// ID is the integer identifier for the season.
 func (s Season) ID() ID {
 	switch s {
 	case Winter:
@@ -45,4 +34,20 @@ func (s Season) ID() ID {
 
 func (s Season) String() string {
 	return string(s)
+}
+
+// nowAt returns the Season for a given time.
+func nowAt(t time.Time) Season {
+	month := t.Month()
+	switch month {
+	case time.January, time.February, time.March:
+		return Winter
+	case time.April, time.May, time.June:
+		return Spring
+	case time.July, time.August, time.September:
+		return Summer
+	case time.October, time.November, time.December:
+		return Autumn
+	}
+	return ""
 }

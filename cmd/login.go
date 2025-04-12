@@ -7,6 +7,9 @@ import (
 
 var loginCmd = &cobra.Command{
 	Use: "login",
+	Example: `
+  bangumi login 授权 bangumi.tv。
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		loginhandler.Run()
 	},

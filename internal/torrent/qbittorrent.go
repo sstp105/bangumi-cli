@@ -1,6 +1,7 @@
 package torrent
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -17,9 +18,11 @@ const (
 	QBittorrentAPILoginPath = "/api/v2/auth/login"
 )
 
-var ErrQBittorrentServerNotFound = fmt.Errorf("qBittorrent port not found")
-var ErrQBittorrentUserNameNotFound = fmt.Errorf("qBittorrent username not found")
-var ErrQBittorrentPasswordNotFound = fmt.Errorf("qBittorrent password not found")
+var (
+	ErrQBittorrentServerNotFound   = errors.New("qBittorrent port not found")
+	ErrQBittorrentUserNameNotFound = errors.New("qBittorrent username not found")
+	ErrQBittorrentPasswordNotFound = errors.New("qBittorrent password not found")
+)
 
 // QBittorrentClient represents a client for interacting with a qBittorrent web API.
 type QBittorrentClient struct {
@@ -81,11 +84,11 @@ func (q *QBittorrentClient) Add(urls string, dest string) error {
 		Post(QBittorrentAPIAddPath)
 
 	if err != nil {
-		return fmt.Errorf("add link failed:%s", err)
+		return fmt.Errorf("add torrent link error:%s", err)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("failed to add torrent: %s", resp.Status())
+		return fmt.Errorf("failed to add torrent, status code:%s", resp.Status())
 	}
 
 	return nil
