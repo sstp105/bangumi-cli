@@ -6,6 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.2
 	github.com/aiialzy/chinese-number v0.3.0
 	github.com/fatih/color v1.18.0
+	github.com/jarcoal/httpmock v1.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.7.0
