@@ -11,7 +11,7 @@ import (
 func Run() {
 	var subscription []mikan.BangumiBase
 	if err := path.ReadJSONConfigFile(path.SubscriptionConfigFile, &subscription); err != nil {
-		console.Errorf("本地没有任何订阅, 请先运行 bangumi subscribe: %v", err)
+		console.Errorf("本地没有任何订阅, 请先运行 bangumi subscribehandler: %v", err)
 		return
 	}
 
@@ -41,9 +41,9 @@ func update(client *mikan.Client, b mikan.BangumiBase) error {
 		return err
 	}
 
-	items := rss.Filter(bangumi.Filters)
+	r := mikan.Filter(*rss, bangumi.Filters)
 	mp := make(map[string]string)
-	for _, item := range items {
+	for _, item := range r.Channel.Items {
 		mp[item.Enclosure.URL] = item.Title
 	}
 

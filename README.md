@@ -48,7 +48,7 @@ mv bangumi-cli /usr/local/go/bin
 bangumi login
 
 # 订阅 Mikan 最新季度动画（解析、生成元数据、预下载准备）
-bangumi subscribe
+bangumi subscribehandler
 
 # 查询 Mikan 订阅的 RSS 是否有新的种子
 bangumi update

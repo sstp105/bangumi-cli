@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/sstp105/bangumi-cli/internal/handler/subscribe"
+	"github.com/sstp105/bangumi-cli/internal/handler/subscribehandler"
+	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/season"
 	"time"
 )
@@ -36,7 +37,11 @@ Summary:
   bangumi subscribe --season 2 --year 2025 指定读取 2025 年，春季番剧订阅列表。
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		subscribe.Run(year, season.ID(seasonID))
+		h, err := subscribehandler.NewHandler(year, seasonID)
+		if err != nil {
+			log.Fatal(err)
+		}
+		h.Run()
 	},
 }
 

@@ -2,6 +2,7 @@ package mikan
 
 import (
 	"encoding/xml"
+	"fmt"
 	"strings"
 )
 
@@ -39,8 +40,22 @@ type Enclosure struct {
 	Length string `xml:"length,attr"`
 }
 
+func (r *RSS) PrintItems() {
+	for _, item := range r.Channel.Items {
+		fmt.Printf("%s\n", item.Title)
+	}
+}
+
+func (r *RSS) Torrents() []string {
+	var urls []string
+	for _, item := range r.Channel.Items {
+		urls = append(urls, item.Enclosure.URL)
+	}
+	return urls
+}
+
 // Filter filters the RSS items based on the provided filters.
-func (r *RSS) Filter(filters Filters) []Item {
+func Filter(r RSS, filters Filters) RSS {
 	var items []Item
 
 	for _, item := range r.Channel.Items {
@@ -57,5 +72,7 @@ func (r *RSS) Filter(filters Filters) []Item {
 		}
 	}
 
-	return items
+	r.Channel.Items = items
+
+	return r
 }

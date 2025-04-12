@@ -2,7 +2,9 @@ package path
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/sstp105/bangumi-cli/internal/libs"
+	"github.com/sstp105/bangumi-cli/internal/mikan"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -78,6 +80,18 @@ func ReadJSONConfigFile(fn string, v any) error {
 	}
 
 	return nil
+}
+
+func ReadSubscriptionConfigFile() ([]mikan.BangumiBase, error) {
+	var subscription []mikan.BangumiBase
+	err := ReadJSONConfigFile(SubscriptionConfigFile, &subscription)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return subscription, nil
 }
 
 func DeleteJSONConfigFile(fn string) error {
