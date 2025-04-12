@@ -95,6 +95,7 @@ func (h *Handler) process(data []mikan.BangumiBase) []mikan.BangumiBase {
 			console.Warningf("已取消保存该订阅。如需订阅，之后可重新运行 subscribe 命令。")
 			continue
 		}
+		console.Successf("%s 订阅成功!", item.Name)
 		subscribed = append(subscribed, item)
 	}
 	return subscribed

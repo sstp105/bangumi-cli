@@ -16,20 +16,20 @@ func (h *Handler) sync(remote []mikan.BangumiBase) []mikan.BangumiBase {
 	}
 
 	added, unchanged, removed := cs.Added, cs.Unchanged, cs.Removed
-	var subscribed = unchanged
+	subscribed := unchanged
 
 	if len(added) > 0 {
-		h.syncSubscribe(subscribed, added)
+		subscribed = h.syncSubscribe(subscribed, added)
 	}
 
 	if len(removed) > 0 {
-		h.syncUnsubscribe(subscribed, removed)
+		subscribed = h.syncUnsubscribe(subscribed, removed)
 	}
 
 	return subscribed
 }
 
-func (h *Handler) syncSubscribe(subscribed, added []mikan.BangumiBase) {
+func (h *Handler) syncSubscribe(subscribed, added []mikan.BangumiBase) []mikan.BangumiBase {
 	console.Infof("有 %d 部新的番剧在 mikan 订阅:", len(added))
 	for _, item := range added {
 		console.Plain(item.Name)
@@ -40,9 +40,10 @@ func (h *Handler) syncSubscribe(subscribed, added []mikan.BangumiBase) {
 		items := h.process(added)
 		subscribed = append(subscribed, items...)
 	}
+	return subscribed
 }
 
-func (h *Handler) syncUnsubscribe(subscribed, removed []mikan.BangumiBase) {
+func (h *Handler) syncUnsubscribe(subscribed, removed []mikan.BangumiBase) []mikan.BangumiBase {
 	console.Infof("有 %d 部番剧在 mikan 取消了订阅:", len(removed))
 	for _, item := range removed {
 		console.Plain(item.Name)
@@ -54,4 +55,5 @@ func (h *Handler) syncUnsubscribe(subscribed, removed []mikan.BangumiBase) {
 	} else {
 		subscribed = append(subscribed, removed...)
 	}
+	return subscribed
 }

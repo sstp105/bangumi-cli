@@ -16,7 +16,7 @@ func filter(rss mikan.RSS) ([]string, *mikan.Filters) {
 	filters := promptFilters()
 
 	console.Infof("根据关键词 %v 筛选结果...", filters)
-	applyFilters(r, filters)
+	r = applyFilters(r, filters)
 
 	console.Info("筛选后的结果如下:")
 	filteredRSS(r)
