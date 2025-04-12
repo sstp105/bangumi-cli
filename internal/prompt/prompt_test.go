@@ -44,3 +44,25 @@ func TestConfirm(t *testing.T) {
 		})
 	}
 }
+
+func TestReadUserInput(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"User enter text", "CHT", "CHT"},
+		{"User enter comma split text", "简体,1080P", "简体,1080P"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockStdin(tt.input, func() {
+				result := ReadUserInput("Please enter text: (hit enter to proceed)")
+				if result != tt.expected {
+					t.Errorf("expected %v, got %v", tt.expected, result)
+				}
+			})
+		})
+	}
+}

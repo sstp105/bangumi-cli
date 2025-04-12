@@ -10,8 +10,7 @@ import (
 
 const (
 	BangumiCredentialConfigFile = "bangumi_creds.json"
-
-	SubscriptionConfigFile = "subscriptions.json"
+	SubscriptionConfigFile      = "subscriptions.json"
 )
 
 // ConfigPath returns the Windows path to the app's config directory in %AppData%\{APP_NAME}.

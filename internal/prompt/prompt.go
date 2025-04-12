@@ -26,7 +26,7 @@ func Confirm(msg string) bool {
 	fmt.Printf("\n%s (press n to cancel, or any key to proceed): ", msg)
 
 	input := ""
-	fmt.Scanln(&input)
+	_, _ = fmt.Scanln(&input)
 	if input == cancelKey {
 		return false
 	}
