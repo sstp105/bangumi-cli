@@ -33,6 +33,10 @@ func Debug(args ...interface{}) {
 	log.Debug(args...)
 }
 
+func Warn(args ...interface{}) {
+	log.Warn(args...)
+}
+
 func Error(args ...interface{}) {
 	log.Error(args...)
 }
@@ -47,6 +51,10 @@ func Infof(format string, args ...interface{}) {
 
 func Debugf(format string, args ...interface{}) {
 	log.Debugf(format, args...)
+}
+
+func Warnf(format string, args ...interface{}) {
+	log.Warnf(format, args...)
 }
 
 func Errorf(format string, args ...interface{}) {
