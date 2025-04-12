@@ -154,6 +154,57 @@ func TestPostUserCollection_Success(t *testing.T) {
 	})
 }
 
+func TestPatchUserCollection_Error(t *testing.T) {
+	withMockClient(t, func(c *Client) {
+		httpmock.RegisterResponder(
+			"PATCH",
+			"https://api.bgm.tv/v0/users/-/collections/123",
+			httpmock.NewErrorResponder(errors.New("context canceled")))
+
+		payload := UserSubjectCollectionModifyPayload{
+			CollectionType: SubjectCollectionType(3),
+		}
+		err := c.PatchUserCollection("123", payload)
+
+		assert.Error(t, err)
+	})
+}
+
+func TestPatchUserCollection_BadRequest(t *testing.T) {
+	withMockClient(t, func(c *Client) {
+		httpmock.RegisterResponder(
+			"PATCH",
+			"https://api.bgm.tv/v0/users/-/collections/123",
+			httpmock.NewJsonResponderOrPanic(502, map[string]string{
+				"title":       "Bad Request",
+				"description": "The request is not valid",
+			}))
+
+		payload := UserSubjectCollectionModifyPayload{
+			CollectionType: SubjectCollectionType(99),
+		}
+		err := c.PatchUserCollection("123", payload)
+
+		assert.Error(t, err)
+	})
+}
+
+func TestPatchUserCollection_Success(t *testing.T) {
+	withMockClient(t, func(c *Client) {
+		httpmock.RegisterResponder(
+			"PATCH",
+			"https://api.bgm.tv/v0/users/-/collections/123",
+			httpmock.NewStringResponder(200, ""))
+
+		payload := UserSubjectCollectionModifyPayload{
+			CollectionType: SubjectCollectionType(2),
+		}
+		err := c.PatchUserCollection("123", payload)
+
+		assert.NoError(t, err)
+	})
+}
+
 func newMockClient() *Client {
 	client := resty.New()
 	client.SetBaseURL(baseURL)
