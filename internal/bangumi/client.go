@@ -2,6 +2,7 @@ package bangumi
 
 import (
 	"fmt"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/sstp105/bangumi-cli/internal/libs"
 )
@@ -9,6 +10,12 @@ import (
 const (
 	// baseURL is the base URL for the bangumi API.
 	baseURL string = "https://api.bgm.tv"
+
+	getUserCollectionPath libs.APIPath = "/v0/users/%s/collections/%s"
+
+	postUserCollectionPath libs.APIPath = "/v0/users/-/collections/%s"
+
+	patchUserCollectionPath libs.APIPath = "/v0/users/-/collections/%s"
 
 	// getUserCollectionsPath is path for fetching a user's collections.
 	getUserCollectionsPath libs.APIPath = "/v0/users/%s/collections"
@@ -24,7 +31,7 @@ const (
 
 var (
 	// headers defines the default HTTP headers used for making requests to the bangumi API.
-	headers map[string]string = map[string]string{
+	headers = map[string]string{
 		"User-Agent":   "github.com/sstp105/bangumi-cli (CLI; Golang)",
 		"Content-Type": "application/json",
 	}
@@ -51,8 +58,36 @@ type UserSubjectCollectionResponse struct {
 
 // UserSubjectCollection represents a single subject collection owned by a user.
 type UserSubjectCollection struct {
+	CollectionType SubjectCollectionType `json:"type"`
+
 	// Subject holds the details of the subject in the collection.
 	Subject SlimSubject `json:"subject"`
+}
+
+type SubjectCollectionType int
+
+func (s SubjectCollectionType) IsValid() bool {
+	switch s {
+	case 1, 2, 3, 4, 5:
+		return true
+	}
+	return false
+}
+
+func (s SubjectCollectionType) String() string {
+	switch s {
+	case 1:
+		return "想看"
+	case 2:
+		return "看过"
+	case 3:
+		return "在看"
+	case 4:
+		return "搁置"
+	case 5:
+		return "抛弃"
+	}
+	return ""
 }
 
 // SlimSubject represents a simplified version of a subject.
@@ -91,6 +126,10 @@ type ErrorResponse struct {
 	Details string `json:"details"`
 }
 
+type UserSubjectCollectionModifyPayload struct {
+	CollectionType SubjectCollectionType `json:"type"`
+}
+
 // Error implements the error interface for ErrorResponse.
 func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("bangumi api error: %s - %s: %s", e.Title, e.Description, e.Details)
@@ -98,18 +137,93 @@ func (e *ErrorResponse) Error() string {
 
 // Client wraps a resty client for interacting with the bangumi API.
 type Client struct {
-	client *resty.Client
+	client     *resty.Client
+	credential OAuthCredential
 }
 
 // NewClient creates and returns a new instance of the Client.
-func NewClient() *Client {
-	c := resty.New()
-	c.SetBaseURL(baseURL)
-	c.SetHeaders(headers)
+func NewClient(opts ...Option) *Client {
+	c := &Client{}
 
-	return &Client{
-		client: c,
+	client := resty.New()
+	client.SetBaseURL(baseURL)
+	client.SetHeaders(headers)
+
+	for _, opt := range opts {
+		opt(c)
 	}
+
+	c.client = client
+
+	return c
+}
+
+func (c *Client) GetUserCollection(username, subjectID string) (*UserSubjectCollection, error) {
+	var collection UserSubjectCollection
+	var errorResp ErrorResponse
+
+	url := libs.FormatAPIPath(getUserCollectionPath, username, subjectID)
+
+	resp, err := c.client.R().
+		SetResult(&collection).
+		SetError(&errorResp).
+		Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	// subject is not collected by user
+	if resp.StatusCode() == 404 {
+		return nil, nil
+	}
+
+	if resp.IsError() {
+		return nil, &errorResp
+	}
+
+	return &collection, nil
+}
+
+func (c *Client) PostUserCollection(subjectID string, payload UserSubjectCollectionModifyPayload) error {
+	var errorResp ErrorResponse
+
+	url := libs.FormatAPIPath(postUserCollectionPath, subjectID)
+
+	resp, err := c.client.R().
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", c.credential.AccessToken)).
+		SetBody(payload).
+		SetError(&errorResp).
+		Post(url)
+	if err != nil {
+		return err
+	}
+
+	if resp.IsError() {
+		return &errorResp
+	}
+
+	return nil
+}
+
+func (c *Client) PatchUserCollection(subjectID string, payload UserSubjectCollectionModifyPayload) error {
+	var errorResp ErrorResponse
+
+	url := libs.FormatAPIPath(patchUserCollectionPath, subjectID)
+
+	resp, err := c.client.R().
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", c.credential.AccessToken)).
+		SetBody(payload).
+		SetError(&errorResp).
+		Patch(url)
+	if err != nil {
+		return err
+	}
+
+	if resp.IsError() {
+		return &errorResp
+	}
+
+	return nil
 }
 
 // GetUserCollections retrieves all the collections for a user from the bangumi API by paginating through the results.
