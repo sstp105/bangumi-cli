@@ -17,8 +17,8 @@ BANGUMI_CLIENT_ID=<bangumi APP ID, 可在开发者平台获取>
 BANGUMI_CLIENT_SECRET=<bangumi APP Secret, 可在开发者平台获取>
 QBITTORRENT_PORT=8080
 QBITTORRENT_USER_NAME=admin
-QBITTORRENT_PASSWORD=<>
-MIKAN_IDENTITY_COOKIE=<>
+QBITTORRENT_PASSWORD=<可在 qbittorrent web ui 中查看/更改>
+MIKAN_IDENTITY_COOKIE=<蜜柑计划 identity cookie>
 ```
 
 根据你的系统使用对应的命令来编译：

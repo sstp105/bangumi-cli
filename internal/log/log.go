@@ -1,16 +1,11 @@
 package log
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
-	path "github.com/sstp105/bangumi-cli/internal/path"
-	"os"
-	"time"
+	"github.com/sstp105/bangumi-cli/internal/path"
 )
 
-var (
-	log = logrus.New()
-)
+var log = logrus.New()
 
 func init() {
 	log.SetLevel(logrus.DebugLevel)
@@ -22,20 +17,12 @@ func init() {
 		ForceColors:      true,
 	})
 
-	date := time.Now().Format("2006-01-02")
-
-	fn := fmt.Sprintf("%s.log", date)
-	dir, err := path.LogPath(fn)
+	f, err := path.LogFile()
 	if err != nil {
-		log.Fatalf("error getting log file path: %s", err)
+		panic(err)
 	}
 
-	logFile, err := os.OpenFile(dir, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening log file: %s", err)
-	}
-
-	log.SetOutput(logFile)
+	log.SetOutput(f)
 }
 
 func Info(args ...interface{}) {

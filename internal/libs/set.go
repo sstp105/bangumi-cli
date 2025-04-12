@@ -1,7 +1,5 @@
 package libs
 
-import "fmt"
-
 // Set is a generic set type that can hold elements of any type.
 type Set[T comparable] struct {
 	elements map[T]struct{}
@@ -31,11 +29,4 @@ func (s *Set[T]) Remove(value T) {
 // Size returns the number of elements in the set
 func (s *Set[T]) Size() int {
 	return len(s.elements)
-}
-
-// Print displays all elements in the set
-func (s *Set[T]) Print() {
-	for item := range s.elements {
-		fmt.Println(item)
-	}
 }

@@ -1,10 +1,12 @@
 package path
 
 import (
+	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/libs"
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 func LogPath(fn string) (string, error) {
@@ -52,7 +54,10 @@ func (m MacOSPath) LogPath() (string, error) {
 	return filepath.Join(dir, "Library", "Logs", AppDir), nil
 }
 
-func ReadLogFile(fn string) (string, error) {
+func ReadLogFile() (string, error) {
+	date := time.Now().Format("2006-01-02")
+	fn := fmt.Sprintf("%s.log", date)
+
 	path, err := LogPath(fn)
 	if err != nil {
 		return "", err
@@ -64,4 +69,21 @@ func ReadLogFile(fn string) (string, error) {
 	}
 
 	return string(data), nil
+}
+
+func LogFile() (*os.File, error) {
+	date := time.Now().Format("2006-01-02")
+	fn := fmt.Sprintf("%s.log", date)
+
+	dir, err := LogPath(fn)
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := os.OpenFile(dir, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
 }
