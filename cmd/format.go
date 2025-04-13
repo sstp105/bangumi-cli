@@ -18,7 +18,7 @@ Summary:
   其他示例：东京喰种√A，CLANNAD 〜AFTER STORY〜，Code Geass 反叛的鲁路修R2.
 	`,
 	Example: `
-  bangumi format 默认将处理当前工作目录的所有媒体文件。
+  bangumi format 默认将处理当前工作目录下的所有媒体文件。
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		formathandler.Run()

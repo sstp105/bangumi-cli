@@ -12,8 +12,10 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/prompt"
 )
 
-var videoFormats []string = []string{".mp4", ".mkv", ".flac"}
-var fmtter mediafmt.MediaFormatter = mediafmt.TVShowFormatter{}
+var (
+	videoFormats                         = []string{".mp4", ".mkv", ".flac"}
+	fmtter       mediafmt.MediaFormatter = mediafmt.TVShowFormatter{}
+)
 
 func Run() {
 	wd, err := os.Getwd()
@@ -28,7 +30,7 @@ func Run() {
 func traverse(dir string) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		fmt.Printf("warning: skipping directory %s due to error: %v", dir, err)
+		console.Errorf("读取路径 %s 时错误:%v", dir, err)
 		return
 	}
 
