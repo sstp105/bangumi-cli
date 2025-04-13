@@ -5,13 +5,15 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/handler/loghandler"
 )
 
-var date string
-
 var logCmd = &cobra.Command{
-	Use: "log",
+	Use:   "log",
+	Short: "查询日志",
+	Long: `
+Summary:
+  log 命令用于显示调试日志。
+	`,
 	Example: `
-  bangumi log
-  bangumi log -d 2025-04-10
+  bangumi log 默认显示当天的日志。
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		loghandler.Run()
@@ -19,7 +21,5 @@ var logCmd = &cobra.Command{
 }
 
 func init() {
-	logCmd.Flags().StringVarP(&date, "date", "d", "", "查询指定日期的日志, 默认将显示当天的日志。")
-
 	rootCmd.AddCommand(logCmd)
 }

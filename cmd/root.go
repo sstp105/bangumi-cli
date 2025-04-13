@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
+	"github.com/sstp105/bangumi-cli/internal/log"
 )
 
 var rootCmd = &cobra.Command{
@@ -13,6 +12,6 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		os.Exit(1)
+		log.Fatalf("error executing root command: %v", err)
 	}
 }

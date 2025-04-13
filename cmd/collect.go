@@ -12,7 +12,7 @@ var collectionType int
 
 var collectCmd = &cobra.Command{
 	Use:   "collect",
-	Short: "格式化所有媒体文件，使其符合 Plex / Jellyfin / Emby 媒体流格式",
+	Short: "批量收藏bangumi.tv条目、 同步mikan订阅列表",
 	Long: `
 Summary:
   collect 命令用于批量收藏用户在 Mikan 上订阅的番剧，并将其同步到 Bangumi.tv，设置为指定的收藏状态（例如“在看”、“想看”等）。
