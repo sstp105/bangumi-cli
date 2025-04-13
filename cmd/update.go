@@ -7,9 +7,15 @@ import (
 )
 
 var updateCmd = &cobra.Command{
-	Use: "update",
+	Use:   "update",
+	Short: "同步订阅的 RSS 并更新下载任务",
+
+	Long: `
+Summary:
+  update 命令会读取用户在蜜柑订阅的 RSS 链接，与本地已下载的种子进行比较，用户可选择是否添加新的种子任务到下载队列中。
+`,
 	Example: `
-  bangumi update。
+  bangumi update 查询 Mikan 订阅的 RSS 与本地进行对比并更新。
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		h, err := updatehandler.NewHandler()
