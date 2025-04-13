@@ -1,7 +1,8 @@
-package unsubscribe
+package unsubscribehandler
 
 import (
 	"fmt"
+
 	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
 	"github.com/sstp105/bangumi-cli/internal/path"

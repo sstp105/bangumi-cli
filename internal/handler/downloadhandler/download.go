@@ -1,4 +1,4 @@
-package download
+package downloadhandler
 
 import (
 	"github.com/sstp105/bangumi-cli/internal/config"

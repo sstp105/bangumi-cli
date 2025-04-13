@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/sstp105/bangumi-cli/internal/handler/format"
+	"github.com/sstp105/bangumi-cli/internal/handler/formathandler"
 )
 
 var formatCmd = &cobra.Command{
@@ -21,7 +21,7 @@ Summary:
   bangumi format 默认将处理当前工作目录的所有媒体文件。
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		format.Run()
+		formathandler.Run()
 	},
 }
 

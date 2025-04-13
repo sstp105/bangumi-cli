@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/sstp105/bangumi-cli/internal/handler/update"
+	"github.com/sstp105/bangumi-cli/internal/console"
+	"github.com/sstp105/bangumi-cli/internal/handler/updatehandler"
 )
 
 var updateCmd = &cobra.Command{
@@ -11,7 +12,12 @@ var updateCmd = &cobra.Command{
   bangumi update。
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		update.Run()
+		h, err := updatehandler.NewHandler()
+		if err != nil {
+			console.Errorf("updatehandler.NewHandler err: %v", err)
+			return
+		}
+		h.Run()
 	},
 }
 

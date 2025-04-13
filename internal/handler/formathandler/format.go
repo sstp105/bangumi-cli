@@ -1,14 +1,15 @@
-package format
+package formathandler
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+
 	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/libs"
 	"github.com/sstp105/bangumi-cli/internal/mediafmt"
 	"github.com/sstp105/bangumi-cli/internal/prompt"
-	"os"
-	"path/filepath"
-	"sort"
 )
 
 var videoFormats []string = []string{".mp4", ".mkv", ".flac"}
