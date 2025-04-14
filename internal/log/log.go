@@ -5,9 +5,11 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/path"
 )
 
-var log = logrus.New()
+var log *logrus.Logger
 
 func init() {
+	log = logrus.New()
+
 	log.SetLevel(logrus.DebugLevel)
 	log.SetFormatter(&logrus.TextFormatter{
 		FullTimestamp:    true,
@@ -19,10 +21,10 @@ func init() {
 
 	f, err := path.LogFile()
 	if err != nil {
-		panic(err)
+		log.Warnf("failed to open log file: %v", err)
+	} else {
+		log.SetOutput(f)
 	}
-
-	log.SetOutput(f)
 }
 
 func Info(args ...interface{}) {

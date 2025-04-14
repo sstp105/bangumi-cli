@@ -58,7 +58,6 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 	c.SetBaseURL(baseURL)
 	c.SetHeaders(headers)
 
-	// TODO: mock login given username and password and retrieve cookie from header
 	cookies := []*http.Cookie{
 		{
 			Name:  identityCookieKey,

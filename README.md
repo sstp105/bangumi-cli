@@ -38,7 +38,7 @@ go build -o bangumi
 mv .\bangumi.exe C:\Users\<usrname>\go\bin -Force
 
 # macos
-mv bangumi /usr/local/go/bin
+mv bangumi /usr/local/bin
 ```
 
 ## 使用
