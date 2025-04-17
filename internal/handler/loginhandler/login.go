@@ -3,6 +3,7 @@ package loginhandler
 import (
 	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/console"
+	"github.com/sstp105/bangumi-cli/internal/handler/loghandler"
 	"github.com/sstp105/bangumi-cli/internal/libs"
 	"github.com/sstp105/bangumi-cli/internal/path"
 	"os"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/config"
-	"github.com/sstp105/bangumi-cli/internal/server"
 )
 
 var (
@@ -79,7 +79,7 @@ func oauth() (*bangumi.OAuthCredential, error) {
 
 	var credential *bangumi.OAuthCredential
 	go func() {
-		server.Start(func(c *bangumi.OAuthCredential) {
+		loghandler.Start(func(c *bangumi.OAuthCredential) {
 			credential = c
 			ch <- os.Interrupt
 		})

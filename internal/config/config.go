@@ -15,7 +15,7 @@ type config struct {
 	port                string
 	bangumiClientID     string
 	bangumiClientSecret string
-	qbittorrentConfig   torrent.QbittorrentClientConfig
+	qbittorrentConfig   torrent.QBittorrentClientConfig
 	mikanClientConfig   mikan.ClientConfig
 }
 
@@ -30,7 +30,7 @@ func init() {
 	cfg.port = os.Getenv(PortKey)
 	cfg.bangumiClientID = os.Getenv(BangumiClientIDKey)
 	cfg.bangumiClientSecret = os.Getenv(BangumiClientSecretKey)
-	cfg.qbittorrentConfig = torrent.QbittorrentClientConfig{
+	cfg.qbittorrentConfig = torrent.QBittorrentClientConfig{
 		Server:   os.Getenv(QBittorrentServerKey),
 		Username: os.Getenv(QBittorrentUserNameKey),
 		Password: os.Getenv(QBittorrentPasswordKey),
@@ -56,7 +56,7 @@ func BangumiClientSecret() string {
 	return cfg.bangumiClientSecret
 }
 
-func QBittorrentConfig() torrent.QbittorrentClientConfig {
+func QBittorrentConfig() torrent.QBittorrentClientConfig {
 	return cfg.qbittorrentConfig
 }
 

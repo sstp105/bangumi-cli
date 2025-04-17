@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	QBittorrentClientName = "qbittorrent"
+	QBittorrentClientName = "qBittorrent"
 
-	QBittorrentAuthCookieName = "SID"
+	QBittorrentAuthCookieKey = "SID"
 
 	QBittorrentAPIAddPath   = "/api/v2/torrents/add"
 	QBittorrentAPILoginPath = "/api/v2/auth/login"
@@ -24,61 +24,48 @@ var (
 	ErrQBittorrentPasswordNotFound = errors.New("qBittorrent password not found")
 )
 
-// QBittorrentClient represents a client for interacting with a qBittorrent web API.
 type QBittorrentClient struct {
-	// client is the Resty HTTP client used to make requests to the qBittorrent Web API.
 	client *resty.Client
-
-	// cookie stores the authentication cookie used in subsequent requests to the qBittorrent Web API.
 	cookie string
-
-	// config holds the configuration settings (port, username, and password) for the qBittorrent client.
-	config QbittorrentClientConfig
+	config QBittorrentClientConfig
 }
 
-// QbittorrentClientConfig represents the configuration required to interact with a qBittorrent client.
-type QbittorrentClientConfig struct {
-	// Server is the port where the qBittorrent Web API is running (e.g. localhost:8080).
-	Server string
-
-	// Username is the username used for authenticating against the qBittorrent Web API.
+type QBittorrentClientConfig struct {
+	Server   string
 	Username string
-
-	// Password is the password used for authenticating against the qBittorrent Web API.
 	Password string
 }
 
-// NewQBittorrentClient https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#authentication
-func NewQBittorrentClient(cfg QbittorrentClientConfig) (*QBittorrentClient, error) {
+func NewQBittorrentClient(cfg QBittorrentClientConfig) (*QBittorrentClient, error) {
 	if err := cfg.validate(); err != nil {
-		return nil, fmt.Errorf("client config is invalid:%s", err)
+		return nil, fmt.Errorf("invalid qBittorrent client config: %w", err)
 	}
 
-	c := resty.New()
-	c.SetBaseURL(cfg.Server)
+	client := resty.New().SetBaseURL(cfg.Server)
 
-	authCookie, err := loginQbittorrent(c, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("login qbittorrent failed:%s", err)
-	}
-
-	return &QBittorrentClient{
-		client: c,
-		cookie: authCookie,
+	q := &QBittorrentClient{
+		client: client,
 		config: cfg,
-	}, nil
+	}
+
+	authCookie, err := q.authenticate()
+	if err != nil {
+		return nil, fmt.Errorf("qBittorrent authentication failed:%w", err)
+	}
+	q.cookie = authCookie
+
+	return q, nil
 }
 
-// Add sends a request to the qBittorrent client to add a torrent using the provided magnet link or torrent URL.
 func (q *QBittorrentClient) Add(urls string, dest string) error {
 	resp, err := q.client.R().
 		SetFormData(map[string]string{
 			"urls":     urls,
 			"savepath": dest,
-			"paused":   "true",
+			"paused":   "true", // do not start the task immediately
 		}).
 		SetCookie(&http.Cookie{
-			Name:  QBittorrentAuthCookieName,
+			Name:  QBittorrentAuthCookieKey,
 			Value: q.cookie,
 		}).
 		Post(QBittorrentAPIAddPath)
@@ -94,13 +81,38 @@ func (q *QBittorrentClient) Add(urls string, dest string) error {
 	return nil
 }
 
-// Name returns the name of the torrent client.
 func (q *QBittorrentClient) Name() string {
 	return QBittorrentClientName
 }
 
-// validate checks that the configuration fields for the qBittorrent client are set correctly.
-func (q *QbittorrentClientConfig) validate() error {
+// authenticate logs in to the qBittorrent webUI API and returns the authentication cookie on success.
+// Reference: https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#authentication
+func (q *QBittorrentClient) authenticate() (string, error) {
+	resp, err := q.client.R().
+		SetHeader("Referer", q.client.BaseURL).
+		SetFormData(map[string]string{
+			"username": q.config.Username,
+			"password": q.config.Password,
+		}).
+		Post(QBittorrentAPILoginPath)
+
+	if err != nil {
+		return "", fmt.Errorf("authentication request failed:%w", err)
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return "", fmt.Errorf("failed to authenticate, status code: %d", resp.StatusCode())
+	}
+
+	authCookie, err := libs.GetCookie(resp.Cookies(), QBittorrentAuthCookieKey)
+	if err != nil {
+		return "", fmt.Errorf("%s not found from response header:%s", QBittorrentAuthCookieKey, err)
+	}
+
+	return authCookie, nil
+}
+
+func (q *QBittorrentClientConfig) validate() error {
 	if q.Server == "" {
 		return ErrQBittorrentServerNotFound
 	}
@@ -114,31 +126,4 @@ func (q *QbittorrentClientConfig) validate() error {
 	}
 
 	return nil
-}
-
-// loginQbittorrent logs in to the qBittorrent webUI API and returns the authentication cookie on success.
-// Reference: https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#authentication
-func loginQbittorrent(client *resty.Client, cfg QbittorrentClientConfig) (string, error) {
-	resp, err := client.R().
-		SetFormData(map[string]string{
-			"username": cfg.Username,
-			"password": cfg.Password,
-		}).
-		SetHeader("Referer", client.BaseURL).
-		Post(QBittorrentAPILoginPath)
-
-	if err != nil {
-		return "", fmt.Errorf("login qbittorrent client error:%s", err)
-	}
-
-	if resp.StatusCode() != http.StatusOK {
-		return "", fmt.Errorf("failed to login to qbittorrent, status: %d", resp.StatusCode())
-	}
-
-	authCookie, err := libs.GetCookie(resp.Cookies(), QBittorrentAuthCookieName)
-	if err != nil {
-		return "", fmt.Errorf("failed to get %s from response header:%s", QBittorrentAuthCookieName, err)
-	}
-
-	return authCookie, nil
 }

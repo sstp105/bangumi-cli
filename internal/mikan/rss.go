@@ -1,6 +1,7 @@
 package mikan
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"strings"
@@ -40,10 +41,12 @@ type Enclosure struct {
 	Length string `xml:"length,attr"`
 }
 
-func (r *RSS) PrintItems() {
+func (r *RSS) String() string {
+	var buf bytes.Buffer
 	for _, item := range r.Channel.Items {
-		fmt.Printf("%s\n", item.Title)
+		buf.WriteString(fmt.Sprintf("%s\n", item.Title))
 	}
+	return buf.String()
 }
 
 func (r *RSS) Torrents() []string {

@@ -11,7 +11,7 @@ var validConfig = config{
 	port:                "8080",
 	bangumiClientID:     "bangumi-client-id",
 	bangumiClientSecret: "bangumi-client-secret",
-	qbittorrentConfig: torrent.QbittorrentClientConfig{
+	qbittorrentConfig: torrent.QBittorrentClientConfig{
 		Server:   "http://localhost:8080",
 		Username: "admin",
 		Password: "password",
@@ -25,7 +25,7 @@ var invalidConfig = config{
 	port:                "",
 	bangumiClientID:     "valid-bangumi-client-id",
 	bangumiClientSecret: "valid-bangumi-client-secret",
-	qbittorrentConfig: torrent.QbittorrentClientConfig{
+	qbittorrentConfig: torrent.QBittorrentClientConfig{
 		Server:   "http://localhost:8080",
 		Username: "valid-qbittorrent-user",
 		Password: "valid-qbittorrent-pass",

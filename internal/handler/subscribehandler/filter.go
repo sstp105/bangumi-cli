@@ -41,5 +41,6 @@ func promptFilters() mikan.Filters {
 }
 
 func filteredRSS(rss mikan.RSS) {
-	rss.PrintItems()
+	res := rss.String()
+	console.Plain(res)
 }

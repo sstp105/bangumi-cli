@@ -24,6 +24,7 @@ func NewHandler() (*Handler, error) {
 		return nil, nil
 	}
 
+	// TODO: factory method that returns torrent.Client based on user input
 	client, err := torrent.NewQBittorrentClient(config.QBittorrentConfig())
 	if err != nil {
 		return nil, err
