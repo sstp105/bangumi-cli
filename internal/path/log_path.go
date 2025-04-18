@@ -5,27 +5,8 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/libs"
 	"os"
 	"path/filepath"
-	"runtime"
 	"time"
 )
-
-func LogPath(fn string) (string, error) {
-	provider, supported := osPathProviders[runtime.GOOS]
-	if !supported {
-		return "", libs.ErrUnsupportedOS
-	}
-
-	path, err := provider.LogPath()
-	if err != nil {
-		return "", err
-	}
-
-	if err := os.MkdirAll(path, 0700); err != nil { // create the config folder if it does not exist
-		return "", err
-	}
-
-	return filepath.Join(path, fn), nil
-}
 
 // LogPath returns the windows path to the app's log directory in %LocalAppData%\<APP_NAME>\logs.
 func (w WindowsPath) LogPath() (string, error) {
@@ -55,10 +36,8 @@ func (m MacOSPath) LogPath() (string, error) {
 }
 
 func ReadLogFile() (string, error) {
-	date := time.Now().Format("2006-01-02")
-	fn := fmt.Sprintf("%s.log", date)
-
-	path, err := LogPath(fn)
+	fn := logFilename()
+	path, err := logPath(fn)
 	if err != nil {
 		return "", err
 	}
@@ -71,11 +50,9 @@ func ReadLogFile() (string, error) {
 	return string(data), nil
 }
 
-func LogFile() (*os.File, error) {
-	date := time.Now().Format("2006-01-02")
-	fn := fmt.Sprintf("%s.log", date)
-
-	dir, err := LogPath(fn)
+func OpenLogFile() (*os.File, error) {
+	fn := logFilename()
+	dir, err := logPath(fn)
 	if err != nil {
 		return nil, err
 	}
@@ -86,4 +63,28 @@ func LogFile() (*os.File, error) {
 	}
 
 	return f, nil
+}
+
+func logFilename() string {
+	date := time.Now().Format("2006-01-02")
+	fn := fmt.Sprintf("%s.log", date)
+	return fn
+}
+
+func logPath(fn string) (string, error) {
+	provider, supported := osPathProviders[runningOS]
+	if !supported {
+		return "", libs.ErrUnsupportedOS
+	}
+
+	path, err := provider.LogPath()
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(path, 0700); err != nil { // create the log folder if it does not exist
+		return "", err
+	}
+
+	return filepath.Join(path, fn), nil
 }

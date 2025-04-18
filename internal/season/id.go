@@ -2,7 +2,7 @@ package season
 
 import "fmt"
 
-// ID represents Season identifier.
+// ID is an identifier for the Season.
 type ID int
 
 func (i ID) Season() (Season, error) {

@@ -5,22 +5,6 @@ import (
 	"testing"
 )
 
-// mockStdin replaces os.Stdin with provided input and restores it after test
-func mockStdin(input string, testFunc func()) {
-	stdin := os.Stdin
-	// restore original os.Stdin after test
-	defer func() {
-		os.Stdin = stdin
-	}()
-
-	r, w, _ := os.Pipe()
-	w.Write([]byte(input + "\n")) // Simulate user input
-	w.Close()
-	os.Stdin = r
-
-	testFunc()
-}
-
 func TestConfirm(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -65,4 +49,20 @@ func TestReadUserInput(t *testing.T) {
 			})
 		})
 	}
+}
+
+// mockStdin replaces os.Stdin with provided input and restores it after test
+func mockStdin(input string, testFunc func()) {
+	stdin := os.Stdin
+	// restore original os.Stdin after test
+	defer func() {
+		os.Stdin = stdin
+	}()
+
+	r, w, _ := os.Pipe()
+	w.Write([]byte(input + "\n")) // Simulate user input
+	w.Close()
+	os.Stdin = r
+
+	testFunc()
 }

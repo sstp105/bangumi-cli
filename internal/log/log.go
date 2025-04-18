@@ -19,7 +19,7 @@ func init() {
 		ForceColors:      true,
 	})
 
-	f, err := path.LogFile()
+	f, err := path.OpenLogFile()
 	if err != nil {
 		log.Warnf("failed to open log file: %v", err)
 	} else {

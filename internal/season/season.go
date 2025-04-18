@@ -12,12 +12,12 @@ const (
 	Winter Season = "冬"
 )
 
-// Now returns the current season.
+// Now returns the current Season.
 func Now() Season {
 	return nowAt(time.Now())
 }
 
-// ID is the integer identifier for the season.
+// ID returns the integer identifier for the Season.
 func (s Season) ID() ID {
 	switch s {
 	case Winter:

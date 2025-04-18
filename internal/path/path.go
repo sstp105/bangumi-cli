@@ -1,18 +1,18 @@
 package path
 
-import (
-	"github.com/sstp105/bangumi-cli/internal/libs"
-)
+import "runtime"
 
 const (
 	AppDir = "bangumi-cli"
 )
 
 var (
+	runningOS = runtime.GOOS
+
 	osPathProviders = map[string]Provider{
-		libs.WindowsOS: WindowsPath{},
-		libs.LinuxOS:   LinuxPath{},
-		libs.MacOS:     MacOSPath{},
+		"windows": WindowsPath{},
+		"linux":   LinuxPath{},
+		"darwin":  MacOSPath{},
 	}
 )
 

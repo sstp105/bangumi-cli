@@ -42,13 +42,6 @@ func (m MacOSPath) ConfigPath() (string, error) {
 	return filepath.Join(dir, ".config", AppDir), nil
 }
 
-// SaveJSONConfigFile saves the value in json format under app's config directory.
-// For Windows, the file will be saved under $env:APPDATA.
-// For UNIX, the file will be saved under $HOME.
-// An error will be returned for unsupported OS.
-// Parameters:
-//   - fn: The file name (e.g., "setting.json").
-//   - v: The value to be saved to the file. It will be marshaled into JSON format.
 func SaveJSONConfigFile(fn string, v any) error {
 	path, err := configPath(fn)
 	if err != nil {
@@ -82,6 +75,15 @@ func ReadJSONConfigFile(fn string, v any) error {
 	return nil
 }
 
+func DeleteJSONConfigFile(fn string) error {
+	path, err := configPath(fn)
+	if err != nil {
+		return err
+	}
+
+	return os.Remove(path)
+}
+
 func ReadSubscriptionConfigFile() ([]mikan.BangumiBase, error) {
 	var subscription []mikan.BangumiBase
 	err := ReadJSONConfigFile(SubscriptionConfigFile, &subscription)
@@ -92,15 +94,6 @@ func ReadSubscriptionConfigFile() ([]mikan.BangumiBase, error) {
 		return nil, err
 	}
 	return subscription, nil
-}
-
-func DeleteJSONConfigFile(fn string) error {
-	path, err := configPath(fn)
-	if err != nil {
-		return err
-	}
-
-	return os.Remove(path)
 }
 
 func configPath(fn string) (string, error) {
