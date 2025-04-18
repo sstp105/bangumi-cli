@@ -18,7 +18,7 @@ var (
 	mockAuthCookie = "mock-auth-cookie"
 )
 
-func TestAuthenticate_Error(t *testing.T) {
+func TestQBittorrent_Authenticate_Error(t *testing.T) {
 	withMockClient(t, func(c *QBittorrentClient) {
 		httpmock.RegisterResponder("POST", QBittorrentAPILoginPath,
 			httpmock.NewErrorResponder(errors.New("context canceled")),
@@ -30,7 +30,7 @@ func TestAuthenticate_Error(t *testing.T) {
 	})
 }
 
-func TestAuthenticate_NotAuthorized(t *testing.T) {
+func TestQBittorrent_Authenticate_NotAuthorized(t *testing.T) {
 	withMockClient(t, func(c *QBittorrentClient) {
 		httpmock.RegisterResponder("POST", QBittorrentAPILoginPath,
 			httpmock.NewJsonResponderOrPanic(403, map[string]string{
@@ -44,7 +44,7 @@ func TestAuthenticate_NotAuthorized(t *testing.T) {
 	})
 }
 
-func TestAuthenticate_AuthCookieNotFound(t *testing.T) {
+func TestQBittorrent_Authenticate_AuthCookieNotFound(t *testing.T) {
 	withMockClient(t, func(c *QBittorrentClient) {
 		httpmock.RegisterResponder("POST", QBittorrentAPILoginPath,
 			func(req *http.Request) (*http.Response, error) {
@@ -59,7 +59,7 @@ func TestAuthenticate_AuthCookieNotFound(t *testing.T) {
 	})
 }
 
-func TestAuthenticate_Success(t *testing.T) {
+func TestQBittorrent_Authenticate_Success(t *testing.T) {
 	withMockClient(t, func(c *QBittorrentClient) {
 		httpmock.RegisterResponder("POST", QBittorrentAPILoginPath,
 			func(req *http.Request) (*http.Response, error) {
@@ -73,6 +73,64 @@ func TestAuthenticate_Success(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, mockAuthCookie, cookie)
 	})
+}
+
+func TestQBittorrent_Name(t *testing.T) {
+	qbt := &QBittorrentClient{}
+	name := qbt.Name()
+
+	assert.Equal(t, QBittorrentClientName, name)
+}
+
+func TestQBittorrent_validate_InvalidServer(t *testing.T) {
+	cfg := QBittorrentClientConfig{
+		Server:   "",
+		Username: mockUserName,
+		Password: mockPassword,
+	}
+
+	err := cfg.validate()
+
+	assert.Error(t, err)
+	assert.Equal(t, ErrQBittorrentServerNotFound, err)
+}
+
+func TestQBittorrent_validate_InvalidUserName(t *testing.T) {
+	cfg := QBittorrentClientConfig{
+		Server:   baseURL,
+		Username: "",
+		Password: mockPassword,
+	}
+
+	err := cfg.validate()
+
+	assert.Error(t, err)
+	assert.Equal(t, ErrQBittorrentUserNameNotFound, err)
+}
+
+func TestQBittorrent_validate_InvalidPassword(t *testing.T) {
+	cfg := QBittorrentClientConfig{
+		Server:   baseURL,
+		Username: mockUserName,
+		Password: "",
+	}
+
+	err := cfg.validate()
+
+	assert.Error(t, err)
+	assert.Equal(t, ErrQBittorrentPasswordNotFound, err)
+}
+
+func TestQBittorrent_validate_ValidConfig(t *testing.T) {
+	cfg := QBittorrentClientConfig{
+		Server:   baseURL,
+		Username: mockUserName,
+		Password: mockPassword,
+	}
+
+	err := cfg.validate()
+
+	assert.NoError(t, err)
 }
 
 func newMockClient() *QBittorrentClient {
