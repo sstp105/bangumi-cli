@@ -13,9 +13,11 @@ import (
 var (
 	baseURL = "http://localhost:8080"
 
-	mockUserName   = "mock-user"
-	mockPassword   = "mock-password"
-	mockAuthCookie = "mock-auth-cookie"
+	mockUserName     = "mock-user"
+	mockPassword     = "mock-password"
+	mockAuthCookie   = "mock-auth-cookie"
+	mockTorrentURLs  = "https://example.com/torrent_1\nhttps://example.com/torrent_2"
+	mockDownloadDest = "/mock-output"
 )
 
 func TestQBittorrent_Authenticate_Error(t *testing.T) {
@@ -25,6 +27,7 @@ func TestQBittorrent_Authenticate_Error(t *testing.T) {
 		)
 
 		cookie, err := c.authenticate()
+
 		assert.Error(t, err)
 		assert.Equal(t, "", cookie)
 	})
@@ -39,6 +42,7 @@ func TestQBittorrent_Authenticate_NotAuthorized(t *testing.T) {
 			}))
 
 		cookie, err := c.authenticate()
+
 		assert.Error(t, err)
 		assert.Equal(t, "", cookie)
 	})
@@ -54,6 +58,7 @@ func TestQBittorrent_Authenticate_AuthCookieNotFound(t *testing.T) {
 		)
 
 		cookie, err := c.authenticate()
+
 		assert.Error(t, err)
 		assert.Equal(t, "", cookie)
 	})
@@ -70,8 +75,50 @@ func TestQBittorrent_Authenticate_Success(t *testing.T) {
 		)
 
 		cookie, err := c.authenticate()
+
 		assert.NoError(t, err)
 		assert.Equal(t, mockAuthCookie, cookie)
+	})
+}
+
+func TestQBittorrent_Add_Error(t *testing.T) {
+	withMockClient(t, func(c *QBittorrentClient) {
+		httpmock.RegisterResponder("POST", QBittorrentAPIAddPath,
+			httpmock.NewErrorResponder(errors.New("context canceled")),
+		)
+
+		err := c.Add(mockTorrentURLs, mockDownloadDest)
+
+		assert.Error(t, err)
+	})
+}
+
+func TestQBittorrent_Add_InternalServerResponse(t *testing.T) {
+	withMockClient(t, func(c *QBittorrentClient) {
+		httpmock.RegisterResponder("POST", QBittorrentAPIAddPath,
+			httpmock.NewJsonResponderOrPanic(500, map[string]string{
+				"title":       "Internal server error",
+				"description": "The request failed due to an internal server error",
+			}))
+
+		err := c.Add(mockTorrentURLs, mockDownloadDest)
+
+		assert.Error(t, err)
+	})
+}
+
+func TestQBittorrent_Add_Success(t *testing.T) {
+	withMockClient(t, func(c *QBittorrentClient) {
+		httpmock.RegisterResponder("POST", QBittorrentAPIAddPath,
+			func(req *http.Request) (*http.Response, error) {
+				resp := httpmock.NewStringResponse(200, "")
+				return resp, nil
+			},
+		)
+
+		err := c.Add(mockTorrentURLs, mockDownloadDest)
+
+		assert.NoError(t, err)
 	})
 }
 
