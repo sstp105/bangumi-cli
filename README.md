@@ -15,8 +15,8 @@ touch .env
 LOCAL_SERVER_PORT=8765
 BANGUMI_CLIENT_ID=<bangumi APP ID, 可在开发者平台获取>
 BANGUMI_CLIENT_SECRET=<bangumi APP Secret, 可在开发者平台获取>
-QBITTORRENT_PORT=8080
-QBITTORRENT_USER_NAME=admin
+QBITTORRENT_SERVER=http://localhost:8080
+QBITTORRENT_USERNAME=admin
 QBITTORRENT_PASSWORD=<可在 qbittorrent web ui 中查看/更改>
 MIKAN_IDENTITY_COOKIE=<蜜柑计划 identity cookie>
 ```
