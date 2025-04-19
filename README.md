@@ -27,7 +27,7 @@ MIKAN_IDENTITY_COOKIE=<蜜柑计划 identity cookie>
 # windows
 go build -o bangumi.exe
 
-# linux, macos
+# macos
 go build -o bangumi
 ```
 

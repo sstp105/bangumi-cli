@@ -8,13 +8,11 @@ import (
 
 const (
 	WindowsOS = "windows"
-	LinuxOS   = "linux"
 	MacOS     = "darwin"
 )
 
 var (
 	osOpenCommands = map[string][]string{
-		LinuxOS:   {"xdg-open"},
 		WindowsOS: {"rundll32", "url.dll,FileProtocolHandler"},
 		MacOS:     {"open"},
 	}

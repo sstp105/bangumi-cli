@@ -8,7 +8,7 @@ import (
 	htmlutil "html"
 )
 
-// ParseMyBangumiList parses all user subscribed bangumi.
+// ParseMyBangumiList parses https://mikanani.me/Home/MyBangumi
 func ParseMyBangumiList(doc *goquery.Document) ([]model.BangumiBase, error) {
 	var res []model.BangumiBase
 
@@ -28,7 +28,7 @@ func ParseMyBangumiList(doc *goquery.Document) ([]model.BangumiBase, error) {
 	return res, nil
 }
 
-// ParseBangumiID parses the bangumi.tv id from the mikan bangumi detail page.
+// ParseBangumiID parses the bangumi.tv id from https://mikanani.me/Home/Bangumi/<MIKAN_BANGUMI_ID>.
 func ParseBangumiID(doc *goquery.Document) (string, error) {
 	var bangumiID string
 
@@ -54,7 +54,8 @@ func ParseBangumiID(doc *goquery.Document) (string, error) {
 	return bangumiID, nil
 }
 
-// ParseSubscribedRSSLink pares the user subscribed fan-sub rss feed link from mikan bangumi page.
+// ParseSubscribedRSSLink pares the user subscribed fan-sub rss feed link
+// from https://mikanani.me/Home/Bangumi/<MIKAN_BANGUMI_ID>.
 func ParseSubscribedRSSLink(doc *goquery.Document) (string, error) {
 	// first seen group is the user subscribed fan-sub group
 	subscribedGroup := doc.Find("div.subgroup-text").First()
@@ -67,7 +68,8 @@ func ParseSubscribedRSSLink(doc *goquery.Document) (string, error) {
 	return rssLink, nil
 }
 
-// parseMyBangumi parses the bangumi element from the user subscribed bangumi list.
+// parseMyBangumi parses user subscribed bangumi item
+// from https://mikanani.me/Home/BangumiCoverFlow?year=<YEAR>&seasonStr=<SEASON>.
 func parseMyBangumi(s *goquery.Selection) (*model.BangumiBase, error) {
 	a := s.Find("a.an-text")
 	href, exist := a.Attr("href")

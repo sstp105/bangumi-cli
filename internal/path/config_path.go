@@ -7,7 +7,6 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/model"
 	"os"
 	"path/filepath"
-	"runtime"
 )
 
 const (
@@ -15,53 +14,49 @@ const (
 	SubscriptionConfigFile      = "subscriptions.json"
 )
 
-// ConfigPath returns the Windows path to the app's config directory in %AppData%\{APP_NAME}.
 func (w WindowsPath) ConfigPath() (string, error) {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return "", err
+	dir := os.Getenv("AppData")
+	if dir == "" {
+		return "", errors.New("%AppData% is not defined")
 	}
 	return filepath.Join(dir, AppDir), nil
 }
 
-// ConfigPath returns the Linux path to the app's config directory in $HOME/.config/<APP_NAME>.
-func (l LinuxPath) ConfigPath() (string, error) {
-	dir, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, ".config", AppDir), nil
-}
-
-// ConfigPath returns the macOS path to the app's config directory in $HOME/.config/<APP_NAME>.
 func (m MacOSPath) ConfigPath() (string, error) {
-	dir, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
+	dir := os.Getenv("Home")
+	if dir == "" {
+		return "", errors.New("$HOME is not defined")
 	}
 	return filepath.Join(dir, ".config", AppDir), nil
 }
 
 func SaveJSONConfigFile(fn string, v any) error {
-	path, err := configPath(fn)
-	if err != nil {
-		return err
-	}
-
 	data, err := libs.MarshalJSONIndented(v)
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(path, data, 0600) // owner r&w
-}
-
-func ReadJSONConfigFile(fn string, v any) error {
-	path, err := configPath(fn)
+	path, err := configPath()
 	if err != nil {
 		return err
 	}
 
+	if err := os.MkdirAll(path, 0700); err != nil { // create the config folder if it does not exist
+		return err
+	}
+
+	path = filepath.Join(path, fn)
+
+	return os.WriteFile(path, data, 0600) // owner r&w
+}
+
+func ReadJSONConfigFile(fn string, v any) error {
+	path, err := configPath()
+	if err != nil {
+		return err
+	}
+
+	path = filepath.Join(path, fn)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -76,10 +71,12 @@ func ReadJSONConfigFile(fn string, v any) error {
 }
 
 func DeleteJSONConfigFile(fn string) error {
-	path, err := configPath(fn)
+	path, err := configPath()
 	if err != nil {
 		return err
 	}
+
+	path = filepath.Join(path, fn)
 
 	return os.Remove(path)
 }
@@ -96,8 +93,8 @@ func ReadSubscriptionConfigFile() ([]model.BangumiBase, error) {
 	return subscription, nil
 }
 
-func configPath(fn string) (string, error) {
-	provider, supported := osPathProviders[runtime.GOOS]
+func configPath() (string, error) {
+	provider, supported := osPathProviders[runningOS]
 	if !supported {
 		return "", libs.ErrUnsupportedOS
 	}
@@ -107,9 +104,5 @@ func configPath(fn string) (string, error) {
 		return "", err
 	}
 
-	if err := os.MkdirAll(path, 0700); err != nil { // create the config folder if it does not exist
-		return "", err
-	}
-
-	return filepath.Join(path, fn), nil
+	return path, nil
 }

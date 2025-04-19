@@ -1,13 +1,16 @@
 package path
 
+import "runtime"
+
 const (
 	AppDir = "bangumi-cli"
 )
 
 var (
+	runningOS = runtime.GOOS
+
 	osPathProviders = map[string]Provider{
 		"windows": WindowsPath{},
-		"linux":   LinuxPath{},
 		"darwin":  MacOSPath{},
 	}
 )
@@ -17,7 +20,5 @@ type Provider interface {
 }
 
 type WindowsPath struct{}
-
-type LinuxPath struct{}
 
 type MacOSPath struct{}
