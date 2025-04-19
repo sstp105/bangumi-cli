@@ -1,68 +1,87 @@
 package log
 
 import (
+	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
-	"github.com/sstp105/bangumi-cli/internal/path"
 )
 
-var log *logrus.Logger
+var (
+	log *logrus.Logger
+
+	info    = color.New(color.FgCyan).SprintFunc()
+	debug   = color.New(color.FgWhite).SprintFunc()
+	success = color.New(color.FgGreen).SprintFunc()
+	warn    = color.New(color.FgYellow).SprintFunc()
+	failure = color.New(color.FgRed).SprintFunc()
+	prompt  = color.New(color.FgBlue, color.Bold).SprintFunc()
+
+	infoF    = color.New(color.FgCyan).SprintfFunc()
+	debugF   = color.New(color.FgWhite).SprintfFunc()
+	successF = color.New(color.FgGreen).SprintfFunc()
+	warnF    = color.New(color.FgYellow).SprintfFunc()
+	failureF = color.New(color.FgRed).SprintfFunc()
+	promptF  = color.New(color.FgBlue, color.Bold).SprintfFunc()
+)
 
 func init() {
 	log = logrus.New()
 
 	log.SetLevel(logrus.DebugLevel)
-	log.SetFormatter(&logrus.TextFormatter{
-		FullTimestamp:    true,
-		TimestampFormat:  "2006-01-02 15:04:05",
-		DisableTimestamp: false,
-		DisableSorting:   false,
-		ForceColors:      true,
-	})
-
-	f, err := path.OpenLogFile()
-	if err != nil {
-		log.Warnf("failed to open log file: %v", err)
-	} else {
-		log.SetOutput(f)
-	}
+	log.SetFormatter(&PlainFormatter{})
 }
 
 func Info(args ...interface{}) {
-	log.Info(args...)
+	log.Info(info(args...))
+}
+
+func Success(args ...interface{}) {
+	log.Info(success(args...))
+}
+
+func Prompt(args ...interface{}) {
+	log.Info(prompt(args...))
 }
 
 func Debug(args ...interface{}) {
-	log.Debug(args...)
+	log.Debug(debug(args...))
 }
 
 func Warn(args ...interface{}) {
-	log.Warn(args...)
+	log.Warn(warn(args...))
 }
 
 func Error(args ...interface{}) {
-	log.Error(args...)
+	log.Error(failure(args...))
 }
 
 func Fatal(args ...interface{}) {
-	log.Fatal(args...)
+	log.Fatal(failure(args...))
 }
 
 func Infof(format string, args ...interface{}) {
-	log.Infof(format, args...)
+	log.Info(infoF(format, args...))
+}
+
+func Successf(format string, args ...interface{}) {
+	log.Info(successF(format, args...))
+}
+
+func Promptf(format string, args ...interface{}) {
+	log.Info(promptF(format, args...))
 }
 
 func Debugf(format string, args ...interface{}) {
-	log.Debugf(format, args...)
+	log.Debug(debugF(format, args...))
 }
 
 func Warnf(format string, args ...interface{}) {
-	log.Warnf(format, args...)
+	log.Warn(warnF(format, args...))
 }
 
 func Errorf(format string, args ...interface{}) {
-	log.Errorf(format, args...)
+	log.Error(failureF(format, args...))
 }
 
 func Fatalf(format string, args ...interface{}) {
-	log.Fatalf(format, args...)
+	log.Fatal(failureF(format, args...))
 }

@@ -2,7 +2,7 @@ package updatehandler
 
 import (
 	"github.com/sstp105/bangumi-cli/internal/config"
-	"github.com/sstp105/bangumi-cli/internal/console"
+	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
 	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/path"
@@ -34,21 +34,21 @@ func NewHandler() (*Handler, error) {
 func (h *Handler) Run() {
 	for _, s := range h.subscription {
 		if err := h.update(s); err != nil {
-			console.Errorf("更新 %s 出错: %v", s.Name, err)
+			log.Errorf("更新 %s 出错: %v", s.Name, err)
 		}
 	}
-	console.Successf("本地订阅同步完成!")
+	log.Success("本地订阅同步完成!")
 }
 
 func (h *Handler) update(bb model.BangumiBase) error {
-	console.Infof("更新:%s", bb.Name)
+	log.Infof("更新:%s", bb.Name)
 
 	var b model.Bangumi
 	if err := path.ReadJSONConfigFile(bb.ConfigFileName(), &b); err != nil {
 		return err
 	}
 
-	console.Infof("查询 RSS 是否有新的种子...")
+	log.Infof("查询 RSS 是否有新的种子...")
 	rss, err := h.mikanClient.LoadRSS(b.RSSLink)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (h *Handler) update(bb model.BangumiBase) error {
 		return err
 	}
 
-	console.Successf("%s 更新完成", bb.Name)
+	log.Successf("%s 更新完成", bb.Name)
 
 	return nil
 }
@@ -96,20 +96,20 @@ func (h *Handler) promptAdd(diff map[string]string) ([]string, error) {
 	sz := len(diff)
 
 	if sz == 0 {
-		console.Plain("已同步 RSS, 暂无新的种子可添加")
+		log.Debug("已同步 RSS, 暂无新的种子可添加")
 		return nil, nil
 	}
 
-	console.Infof("有 %d 个新的种子可添加:", sz)
+	log.Infof("有 %d 个新的种子可添加:", sz)
 	var added []string
 	for k, v := range diff {
-		console.Plain(v)
+		log.Debug(v)
 		added = append(added, k)
 	}
 
 	proceed := prompt.Confirm("是否要添加?")
 	if !proceed {
-		console.Plain("更新已取消")
+		log.Debug("更新已取消")
 		return nil, nil
 	}
 
