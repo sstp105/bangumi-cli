@@ -1,14 +1,13 @@
 package formathandler
 
 import (
+	"github.com/sstp105/bangumi-cli/internal/libs"
+	"github.com/sstp105/bangumi-cli/internal/log"
+	"github.com/sstp105/bangumi-cli/internal/mediafmt"
+	"github.com/sstp105/bangumi-cli/internal/prompt"
 	"os"
 	"path/filepath"
 	"sort"
-
-	"github.com/sstp105/bangumi-cli/internal/console"
-	"github.com/sstp105/bangumi-cli/internal/libs"
-	"github.com/sstp105/bangumi-cli/internal/mediafmt"
-	"github.com/sstp105/bangumi-cli/internal/prompt"
 )
 
 var (
@@ -19,7 +18,7 @@ var (
 func Run() {
 	wd, err := os.Getwd()
 	if err != nil {
-		console.Errorf("获取当前工作目录路径错误: %v", err)
+		log.Errorf("获取当前工作目录路径错误: %v", err)
 		return
 	}
 
@@ -29,7 +28,7 @@ func Run() {
 func traverse(dir string) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		console.Errorf("读取路径 %s 时错误:%v", dir, err)
+		log.Errorf("读取路径 %s 时错误:%v", dir, err)
 		return
 	}
 
@@ -46,7 +45,7 @@ func traverse(dir string) {
 func process(dir string) {
 	files, err := libs.FindFiles(dir, videoFormats)
 	if err != nil {
-		console.Errorf("%s 查找文件错误: %v", dir, err)
+		log.Errorf("%s 查找文件错误: %v", dir, err)
 		return
 	}
 
@@ -57,23 +56,23 @@ func process(dir string) {
 }
 
 func rename(files []string, dir string) {
-	console.Plainf("处理:%s, 共 %d 个文件", dir, len(files))
+	log.Debugf("处理:%s, 共 %d 个文件", dir, len(files))
 
 	// dry-run
 	paths, err := mediafmt.FormatFiles(files, dir, fmtter)
 	if err != nil {
-		console.Errorf("命名时出现错误, 路径: %s:%s", dir, err)
+		log.Errorf("命名时出现错误, 路径: %s:%s", dir, err)
 		return
 	}
 
 	if proceed := prompt.Confirm("是否要继续这些命名?"); !proceed {
-		console.Info("命名已取消")
+		log.Info("命名已取消")
 		return
 	}
 
 	for i, f := range files {
 		if err := os.Rename(f, paths[i]); err != nil {
-			console.Errorf("命名 %s -> %s 时错误: %v\n", f, paths[i], err)
+			log.Errorf("命名 %s -> %s 时错误: %v\n", f, paths[i], err)
 		}
 	}
 }

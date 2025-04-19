@@ -1,8 +1,8 @@
 package subscribehandler
 
 import (
-	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/libs"
+	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
 	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/prompt"
@@ -11,15 +11,15 @@ import (
 func filter(rss mikan.RSS) ([]string, *model.Filters) {
 	r := rss
 
-	console.Info("当前订阅的RSS包含以下结果:")
+	log.Info("当前订阅的RSS包含以下结果:")
 	filteredRSS(r)
 
 	filters := promptFilters()
 
-	console.Infof("根据关键词 %v 筛选结果...", filters)
+	log.Infof("根据关键词 %v 筛选结果...", filters)
 	r = applyFilters(r, filters)
 
-	console.Info("筛选后的结果如下:")
+	log.Info("筛选后的结果如下:")
 	filteredRSS(r)
 
 	torrents := r.TorrentURLs()
@@ -43,5 +43,5 @@ func promptFilters() model.Filters {
 
 func filteredRSS(rss mikan.RSS) {
 	res := rss.String()
-	console.Plain(res)
+	log.Debug(res)
 }

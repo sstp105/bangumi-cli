@@ -3,7 +3,6 @@ package collecthandler
 import (
 	"errors"
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
-	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/path"
@@ -50,13 +49,13 @@ func (h *Handler) Run() {
 
 	for _, s := range h.subscription {
 		if err := h.process(s); err != nil {
-			console.Errorf("处理 %s 时出错:%s", s.Name, err)
+			log.Errorf("处理 %s 时出错:%s", s.Name, err)
 			errs = append(errs, err)
 		}
 	}
 
 	if len(errs) == 0 {
-		console.Successf("已同步 mikan 订阅的番剧到 bangumi %s, 任务完成!", h.collectionType.String())
+		log.Successf("已同步 mikan 订阅的番剧到 bangumi %s, 任务完成!", h.collectionType.String())
 	}
 }
 
@@ -72,7 +71,7 @@ func (h *Handler) process(s model.BangumiBase) error {
 		return err
 	}
 
-	console.Infof("收藏 %s 成功 (%s)", s.Name, h.collectionType.String())
+	log.Infof("收藏 %s 成功 (%s)", s.Name, h.collectionType.String())
 
 	return nil
 }

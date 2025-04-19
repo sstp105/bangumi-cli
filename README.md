@@ -64,7 +64,4 @@ bangumi collect
 
 # 取消订阅动画
 bangumi unsubscribe
-
-# 查询 debug 日志
-bangumi log 
 ```
