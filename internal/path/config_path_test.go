@@ -1,6 +1,8 @@
 package path
 
 import (
+	"errors"
+	"github.com/sstp105/bangumi-cli/internal/libs"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -57,5 +59,65 @@ func TestMacOSPath_ConfigPath(t *testing.T) {
 
 		require.Error(t, err)
 		require.EqualError(t, err, "$HOME is not defined")
+	})
+}
+
+type mockPathProvider struct {
+	configPathFunc func() (string, error)
+}
+
+func (m mockPathProvider) ConfigPath() (string, error) {
+	return m.configPathFunc()
+}
+
+func TestConfigPath(t *testing.T) {
+	originalRunningOS := runningOS
+	originalProviders := osPathProviders
+
+	defer func() {
+		runningOS = originalRunningOS
+		osPathProviders = originalProviders
+	}()
+
+	t.Run("supported OS with successful path provider", func(t *testing.T) {
+		runningOS = "macos"
+		osPathProviders = map[string]Provider{
+			"macos": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return "/Users/test/.config/mock-app-name", nil
+				},
+			},
+		}
+
+		path, err := configPath()
+
+		require.NoError(t, err)
+		require.Equal(t, "/Users/test/.config/mock-app-name", path)
+	})
+
+	t.Run("supported OS but provider returns error", func(t *testing.T) {
+		runningOS = "windows"
+		osPathProviders = map[string]Provider{
+			"windows": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return "", errors.New("%AppData% is not defined")
+				},
+			},
+		}
+
+		_, err := configPath()
+
+		require.Error(t, err)
+		require.EqualError(t, err, "%AppData% is not defined")
+	})
+
+	t.Run("unsupported OS", func(t *testing.T) {
+		runningOS = "plan9"
+		osPathProviders = map[string]Provider{}
+
+		_, err := configPath()
+
+		require.Error(t, err)
+		require.Equal(t, libs.ErrUnsupportedOS, err)
 	})
 }
