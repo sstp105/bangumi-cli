@@ -19,7 +19,8 @@ Summary:
 		if err != nil {
 			return
 		}
-		h.Run()
+
+		_ = h.Run()
 	},
 }
 
