@@ -3,11 +3,11 @@ package subscribehandler
 import (
 	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/console"
-	"github.com/sstp105/bangumi-cli/internal/mikan"
+	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/prompt"
 )
 
-func (h *Handler) sync(remote []mikan.BangumiBase) []mikan.BangumiBase {
+func (h *Handler) sync(remote []model.BangumiBase) []model.BangumiBase {
 	cs := NewChangeSet(h.subscription, remote)
 
 	if !cs.HasChanged() {
@@ -29,7 +29,7 @@ func (h *Handler) sync(remote []mikan.BangumiBase) []mikan.BangumiBase {
 	return subscribed
 }
 
-func (h *Handler) syncSubscribe(subscribed, added []mikan.BangumiBase) []mikan.BangumiBase {
+func (h *Handler) syncSubscribe(subscribed, added []model.BangumiBase) []model.BangumiBase {
 	console.Infof("有 %d 部新的番剧在 mikan 订阅:", len(added))
 	for _, item := range added {
 		console.Plain(item.Name)
@@ -43,7 +43,7 @@ func (h *Handler) syncSubscribe(subscribed, added []mikan.BangumiBase) []mikan.B
 	return subscribed
 }
 
-func (h *Handler) syncUnsubscribe(subscribed, removed []mikan.BangumiBase) []mikan.BangumiBase {
+func (h *Handler) syncUnsubscribe(subscribed, removed []model.BangumiBase) []model.BangumiBase {
 	console.Infof("有 %d 部番剧在 mikan 取消了订阅:", len(removed))
 	for _, item := range removed {
 		console.Plain(item.Name)

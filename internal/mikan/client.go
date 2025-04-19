@@ -27,31 +27,26 @@ var headers = map[string]string{
 	"Accept-Language": "en-US,en;q=0.9",
 }
 
-// Client holds the HTTP client and configuration for interacting with Mikan.
 type Client struct {
 	client *resty.Client
 	config ClientConfig
 }
 
-// ClientConfig contains configuration options for the Client.
 type ClientConfig struct {
 	// IdentityCookie represents the authentication cookie in Mikan
 	IdentityCookie string
 }
 
-// ClientOption defines a function type for setting optional parameters for the Client.
 type ClientOption func(*clientOption)
 
-// clientOption holds the optional parameters that can be configured with option calls.
 type clientOption struct {
 	year   int
 	season season.Season
 }
 
-// NewClient creates and returns a new Client for Mikan requests.
 func NewClient(cfg ClientConfig) (*Client, error) {
 	if err := cfg.validate(); err != nil {
-		return nil, fmt.Errorf("create mikan client err: %s", err)
+		return nil, fmt.Errorf("invalid mikan client config: %s", err)
 	}
 
 	c := resty.New()
@@ -77,7 +72,6 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 func (c *Client) GetMyBangumi(opts ...ClientOption) (string, error) {
 	defaultYear := time.Now().Year()
 	defaultSeason := season.Now()
-
 	opt := &clientOption{
 		year:   defaultYear,
 		season: defaultSeason,
@@ -91,25 +85,24 @@ func (c *Client) GetMyBangumi(opts ...ClientOption) (string, error) {
 		Get(libs.FormatAPIPath(myBangumiPath, opt.year, url.QueryEscape(string(opt.season))))
 
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch my bangumi page: %w", err)
+		return "", fmt.Errorf("failed to fetch mikan my bangumi page: %w", err)
 	}
 
 	return resp.String(), nil
 }
 
-// GetBangumi returns the response from Mikan bangumi detail page.
+// GetBangumi returns the html response from Mikan bangumi detail page.
 func (c *Client) GetBangumi(id string) (string, error) {
 	resp, err := c.client.R().Get(libs.FormatAPIPath(bangumiPath, id))
 
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch bangumi page: %w", err)
+		return "", fmt.Errorf("failed to fetch mikan bangumi%s: %w", id, err)
 	}
 
 	return resp.String(), nil
 }
 
-// ReadRSS reads and decodes the rss link as RSS
-func (c *Client) ReadRSS(url string) (*RSS, error) {
+func (c *Client) LoadRSS(url string) (*RSS, error) {
 	resp, err := c.client.R().Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch rss: %w", err)
@@ -125,7 +118,6 @@ func (c *Client) ReadRSS(url string) (*RSS, error) {
 	return &rss, nil
 }
 
-// WithYearAndSeason sets the year and season for the client option.
 func WithYearAndSeason(year int, season season.Season) ClientOption {
 	return func(opt *clientOption) {
 		opt.year = year
@@ -133,7 +125,6 @@ func WithYearAndSeason(year int, season season.Season) ClientOption {
 	}
 }
 
-// validate validates the ClientConfig and returns an error if the config is invalid.
 func (c *ClientConfig) validate() error {
 	if c.IdentityCookie == "" {
 		return fmt.Errorf("%s is empty", identityCookieKey)

@@ -4,10 +4,11 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/libs"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
+	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/prompt"
 )
 
-func filter(rss mikan.RSS) ([]string, *mikan.Filters) {
+func filter(rss mikan.RSS) ([]string, *model.Filters) {
 	r := rss
 
 	console.Info("当前订阅的RSS包含以下结果:")
@@ -26,16 +27,16 @@ func filter(rss mikan.RSS) ([]string, *mikan.Filters) {
 	return torrents, &filters
 }
 
-func applyFilters(rss mikan.RSS, filters mikan.Filters) mikan.RSS {
+func applyFilters(rss mikan.RSS, filters model.Filters) mikan.RSS {
 	return rss.Filter(filters)
 }
 
-func promptFilters() mikan.Filters {
+func promptFilters() model.Filters {
 	var input string
 	input = prompt.ReadUserInput("请输入想要包含的关键词，多个请以英文逗号(,)隔开, 完成后请按回车")
 	include := libs.SplitToSlice(input, ",")
 
-	return mikan.Filters{
+	return model.Filters{
 		Include: include,
 	}
 }

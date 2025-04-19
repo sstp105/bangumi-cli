@@ -4,14 +4,14 @@ import (
 	"errors"
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/console"
-	"github.com/sstp105/bangumi-cli/internal/mikan"
+	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/path"
 )
 
 type Handler struct {
 	username       string
 	collectionType bangumi.SubjectCollectionType
-	subscription   []mikan.BangumiBase
+	subscription   []model.BangumiBase
 	client         *bangumi.Client
 }
 
@@ -24,7 +24,7 @@ func NewHandler(username string, collectionType bangumi.SubjectCollectionType) (
 		return nil, errors.New("invalid collection type %d")
 	}
 
-	var subscription []mikan.BangumiBase
+	var subscription []model.BangumiBase
 	if err := path.ReadJSONConfigFile(path.SubscriptionConfigFile, &subscription); err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (h *Handler) Run() {
 	}
 }
 
-func (h *Handler) process(s mikan.BangumiBase) error {
+func (h *Handler) process(s model.BangumiBase) error {
 	id, err := read(s.ConfigFileName())
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func (h *Handler) process(s mikan.BangumiBase) error {
 }
 
 func read(fn string) (string, error) {
-	var subject mikan.Bangumi
+	var subject model.Bangumi
 	if err := path.ReadJSONConfigFile(fn, &subject); err != nil {
 		return "", err
 	}

@@ -3,80 +3,14 @@ package mikan
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/libs"
+	"github.com/sstp105/bangumi-cli/internal/model"
 	htmlutil "html"
-	"strings"
 )
 
-// BangumiBase represents the basic information about a Mikan bangumi.
-// The struct is also used to be saved as local config for subsequent fetch/update.
-type BangumiBase struct {
-	// ID represents Mikan bangumi id.
-	ID string `json:"id"`
-
-	// Name represents the bangumi name in Simplified Chinese language.
-	Name string `json:"name"`
-
-	// Link represents the Mikan bangumi detail page url.
-	Link string `json:"link"`
-}
-
-func (b BangumiBase) ConfigFileName() string {
-	return fmt.Sprintf("%s.json", b.ID)
-}
-
-func (b BangumiBase) String() string {
-	return fmt.Sprintf("ID:%s, Name:%s, Link:%s\n", b.ID, b.Name, b.Link)
-}
-
-func (b BangumiBase) SavePath() string {
-	return fmt.Sprintf("/%s", b.Name)
-}
-
-// Bangumi represents detailed information about a Mikan bangumi
-type Bangumi struct {
-	BangumiBase
-
-	// BangumiID represents bangumi.tv id.
-	BangumiID string `json:"bangumi_id"`
-
-	// RSSLink represents the rss feed url for the bangumi.
-	RSSLink string `json:"rss_link"`
-
-	// Torrents holds a slice of torrent link or files for the bangumi.
-	Torrents []string `json:"torrents"`
-
-	// Filters holds user configured Filters.
-	Filters Filters `json:"filters"`
-
-	Episodes []bangumi.Episode `json:"episodes"`
-}
-
-func (b Bangumi) StartEpisode() int {
-	if len(b.Episodes) == 0 {
-		return 1
-	}
-	return b.Episodes[0].Sort
-}
-
-func (b Bangumi) TorrentURLs() string {
-	var builder strings.Builder
-	for _, t := range b.Torrents {
-		builder.WriteString(t + "\n")
-	}
-	return builder.String()
-}
-
-// Filters represents the filter settings for including or excluding specific content from the rss.
-type Filters struct {
-	// Include holds a slice of string that must contain.
-	Include []string `json:"include"`
-}
-
-// ParseMyBangumiList parses all subscribed bangumi.
-func ParseMyBangumiList(doc *goquery.Document) ([]BangumiBase, error) {
-	var res []BangumiBase
+// ParseMyBangumiList parses all user subscribed bangumi.
+func ParseMyBangumiList(doc *goquery.Document) ([]model.BangumiBase, error) {
+	var res []model.BangumiBase
 
 	selector := ".sk-bangumi ul li"
 	doc.Find(selector).Each(func(i int, s *goquery.Selection) {
@@ -134,7 +68,7 @@ func ParseSubscribedRSSLink(doc *goquery.Document) (string, error) {
 }
 
 // parseMyBangumi parses the bangumi element from the user subscribed bangumi list.
-func parseMyBangumi(s *goquery.Selection) (*BangumiBase, error) {
+func parseMyBangumi(s *goquery.Selection) (*model.BangumiBase, error) {
 	a := s.Find("a.an-text")
 	href, exist := a.Attr("href")
 	if !exist {
@@ -152,7 +86,7 @@ func parseMyBangumi(s *goquery.Selection) (*BangumiBase, error) {
 		return nil, fmt.Errorf("failed to parse bangumi id: %w", err)
 	}
 
-	return &BangumiBase{
+	return &model.BangumiBase{
 		ID:   id,
 		Name: name,
 		Link: href,

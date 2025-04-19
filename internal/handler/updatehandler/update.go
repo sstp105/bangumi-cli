@@ -4,13 +4,14 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/config"
 	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
+	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/path"
 	"github.com/sstp105/bangumi-cli/internal/prompt"
 )
 
 type Handler struct {
 	mikanClient  *mikan.Client
-	subscription []mikan.BangumiBase
+	subscription []model.BangumiBase
 }
 
 func NewHandler() (*Handler, error) {
@@ -39,16 +40,16 @@ func (h *Handler) Run() {
 	console.Successf("本地订阅同步完成!")
 }
 
-func (h *Handler) update(bb mikan.BangumiBase) error {
+func (h *Handler) update(bb model.BangumiBase) error {
 	console.Infof("更新:%s", bb.Name)
 
-	var b mikan.Bangumi
+	var b model.Bangumi
 	if err := path.ReadJSONConfigFile(bb.ConfigFileName(), &b); err != nil {
 		return err
 	}
 
 	console.Infof("查询 RSS 是否有新的种子...")
-	rss, err := h.mikanClient.ReadRSS(b.RSSLink)
+	rss, err := h.mikanClient.LoadRSS(b.RSSLink)
 	if err != nil {
 		return err
 	}
@@ -75,7 +76,7 @@ func (h *Handler) update(bb mikan.BangumiBase) error {
 	return nil
 }
 
-func (h *Handler) diff(rss mikan.RSS, filters mikan.Filters, torrents []string) (map[string]string, error) {
+func (h *Handler) diff(rss mikan.RSS, filters model.Filters, torrents []string) (map[string]string, error) {
 	r := rss.Filter(filters)
 
 	mp := make(map[string]string) // key:hash, value:name

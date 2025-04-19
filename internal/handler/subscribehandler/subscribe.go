@@ -7,6 +7,7 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/console"
 	"github.com/sstp105/bangumi-cli/internal/libs"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
+	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/path"
 	"github.com/sstp105/bangumi-cli/internal/prompt"
 	"github.com/sstp105/bangumi-cli/internal/season"
@@ -18,7 +19,7 @@ type Handler struct {
 	year          int
 	seasonID      season.ID
 	season        season.Season
-	subscription  []mikan.BangumiBase
+	subscription  []model.BangumiBase
 }
 
 func NewHandler(year, seasonID int) (*Handler, error) {
@@ -72,18 +73,18 @@ func (h *Handler) Run() {
 	console.Success("本地订阅已和 mikan 订阅同步!")
 }
 
-func (h *Handler) add(subscription []mikan.BangumiBase) {
+func (h *Handler) add(subscription []model.BangumiBase) {
 	console.Infof("本地暂无番剧订阅, 准备订阅 mikan %d %d 订阅列表", h.year, h.seasonID)
 	h.subscription = h.process(subscription)
 }
 
-func (h *Handler) update(subscription []mikan.BangumiBase) {
+func (h *Handler) update(subscription []model.BangumiBase) {
 	console.Infof("本地已有订阅, 准备同步 mikan %d %d 订阅列表", h.year, h.seasonID)
 	h.subscription = h.sync(subscription)
 }
 
-func (h *Handler) process(data []mikan.BangumiBase) []mikan.BangumiBase {
-	var subscribed []mikan.BangumiBase
+func (h *Handler) process(data []model.BangumiBase) []model.BangumiBase {
+	var subscribed []model.BangumiBase
 
 	for _, item := range data {
 		proceed, err := h.subscribe(item)
@@ -101,7 +102,7 @@ func (h *Handler) process(data []mikan.BangumiBase) []mikan.BangumiBase {
 	return subscribed
 }
 
-func (h *Handler) subscribe(bb mikan.BangumiBase) (bool, error) {
+func (h *Handler) subscribe(bb model.BangumiBase) (bool, error) {
 	b, err := h.parse(bb)
 	if err != nil {
 		return false, err
@@ -118,7 +119,7 @@ func (h *Handler) subscribe(bb mikan.BangumiBase) (bool, error) {
 	return true, nil
 }
 
-func unsubscribe(items []mikan.BangumiBase) {
+func unsubscribe(items []model.BangumiBase) {
 	for _, item := range items {
 		if err := path.DeleteJSONConfigFile(item.ConfigFileName()); err != nil {
 			console.Errorf("取消订阅:%s 错误:%s", item.Name, err)
@@ -126,7 +127,7 @@ func unsubscribe(items []mikan.BangumiBase) {
 	}
 }
 
-func (h *Handler) fetch() ([]mikan.BangumiBase, error) {
+func (h *Handler) fetch() ([]model.BangumiBase, error) {
 	year := h.year
 	s := h.season
 
@@ -155,7 +156,7 @@ func (h *Handler) fetch() ([]mikan.BangumiBase, error) {
 	return list, nil
 }
 
-func (h *Handler) parse(b mikan.BangumiBase) (*mikan.Bangumi, error) {
+func (h *Handler) parse(b model.BangumiBase) (*model.Bangumi, error) {
 	console.Infof("开始解析番剧:%s, id:%s", b.Name, b.ID)
 
 	resp, err := h.mikanClient.GetBangumi(b.ID)
@@ -183,14 +184,14 @@ func (h *Handler) parse(b mikan.BangumiBase) (*mikan.Bangumi, error) {
 		return nil, err
 	}
 
-	rss, err := h.mikanClient.ReadRSS(rssLink)
+	rss, err := h.mikanClient.LoadRSS(rssLink)
 	if err != nil {
 		return nil, err
 	}
 
 	torrents, filters := filter(*rss)
 
-	return &mikan.Bangumi{
+	return &model.Bangumi{
 		BangumiBase: b,
 		BangumiID:   bangumiID,
 		RSSLink:     rssLink,
@@ -211,7 +212,7 @@ func (h *Handler) save() error {
 	return nil
 }
 
-func saveBangumi(b mikan.Bangumi) error {
+func saveBangumi(b model.Bangumi) error {
 	if err := path.SaveJSONConfigFile(b.ConfigFileName(), b); err != nil {
 		return fmt.Errorf("save bangumi config file error: %s", err)
 	}

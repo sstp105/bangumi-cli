@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"github.com/sstp105/bangumi-cli/internal/model"
 	"strings"
 )
 
@@ -53,7 +54,7 @@ func (r RSS) TorrentURLs() []string {
 	return urls
 }
 
-func (r RSS) Filter(filters Filters) RSS {
+func (r RSS) Filter(filters model.Filters) RSS {
 	var items []Item
 
 	for _, item := range r.Channel.Items {

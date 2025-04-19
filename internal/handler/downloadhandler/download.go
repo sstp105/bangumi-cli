@@ -3,14 +3,14 @@ package downloadhandler
 import (
 	"github.com/sstp105/bangumi-cli/internal/config"
 	"github.com/sstp105/bangumi-cli/internal/console"
-	"github.com/sstp105/bangumi-cli/internal/mikan"
+	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/path"
 	"github.com/sstp105/bangumi-cli/internal/torrent"
 )
 
 type Handler struct {
 	client       *torrent.QBittorrentClient
-	subscription []mikan.BangumiBase
+	subscription []model.BangumiBase
 }
 
 func NewHandler() (*Handler, error) {
@@ -44,10 +44,10 @@ func (h *Handler) Run() {
 	}
 }
 
-func (h *Handler) download(bb mikan.BangumiBase) error {
+func (h *Handler) download(bb model.BangumiBase) error {
 	console.Infof("%s - 保存路径:%s", bb.Name, bb.SavePath())
 
-	var b mikan.Bangumi
+	var b model.Bangumi
 	if err := path.ReadJSONConfigFile(bb.ConfigFileName(), &b); err != nil {
 		console.Errorf("读取 %s 配置文件错误:%s", bb.Name, err)
 		return err

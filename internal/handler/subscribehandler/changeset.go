@@ -2,23 +2,23 @@ package subscribehandler
 
 import (
 	"github.com/sstp105/bangumi-cli/internal/libs"
-	"github.com/sstp105/bangumi-cli/internal/mikan"
+	"github.com/sstp105/bangumi-cli/internal/model"
 )
 
 type ChangeSet struct {
-	Added     []mikan.BangumiBase
-	Unchanged []mikan.BangumiBase
-	Removed   []mikan.BangumiBase
+	Added     []model.BangumiBase
+	Unchanged []model.BangumiBase
+	Removed   []model.BangumiBase
 }
 
 func (cs ChangeSet) HasChanged() bool {
 	return len(cs.Added) != 0 || len(cs.Removed) != 0
 }
 
-func NewChangeSet(local, remote []mikan.BangumiBase) ChangeSet {
-	var added []mikan.BangumiBase
-	var removed []mikan.BangumiBase
-	var common []mikan.BangumiBase
+func NewChangeSet(local, remote []model.BangumiBase) ChangeSet {
+	var added []model.BangumiBase
+	var removed []model.BangumiBase
+	var common []model.BangumiBase
 
 	localSet := libs.NewSet[string]()
 	remoteSet := libs.NewSet[string]()

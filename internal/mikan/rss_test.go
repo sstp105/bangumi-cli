@@ -1,6 +1,7 @@
 package mikan
 
 import (
+	"github.com/sstp105/bangumi-cli/internal/model"
 	"testing"
 )
 
@@ -49,7 +50,7 @@ func TestRSS_TorrentURLs(t *testing.T) {
 }
 
 func TestRSS_Filter_Include(t *testing.T) {
-	f := Filters{Include: []string{"简体"}}
+	f := model.Filters{Include: []string{"简体"}}
 	r := rss.Filter(f)
 	got := r.TorrentURLs()
 

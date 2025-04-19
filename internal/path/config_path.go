@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/sstp105/bangumi-cli/internal/libs"
-	"github.com/sstp105/bangumi-cli/internal/mikan"
+	"github.com/sstp105/bangumi-cli/internal/model"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -84,8 +84,8 @@ func DeleteJSONConfigFile(fn string) error {
 	return os.Remove(path)
 }
 
-func ReadSubscriptionConfigFile() ([]mikan.BangumiBase, error) {
-	var subscription []mikan.BangumiBase
+func ReadSubscriptionConfigFile() ([]model.BangumiBase, error) {
+	var subscription []model.BangumiBase
 	err := ReadJSONConfigFile(SubscriptionConfigFile, &subscription)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {

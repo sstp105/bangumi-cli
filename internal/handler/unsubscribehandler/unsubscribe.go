@@ -2,9 +2,9 @@ package unsubscribehandler
 
 import (
 	"fmt"
+	"github.com/sstp105/bangumi-cli/internal/model"
 
 	"github.com/sstp105/bangumi-cli/internal/console"
-	"github.com/sstp105/bangumi-cli/internal/mikan"
 	"github.com/sstp105/bangumi-cli/internal/path"
 )
 
@@ -18,13 +18,13 @@ func Run(id int) {
 }
 
 func removeAll() {
-	var subscription []mikan.BangumiBase
+	var subscription []model.BangumiBase
 	if err := path.ReadJSONConfigFile(path.SubscriptionConfigFile, &subscription); err != nil {
 		console.Errorf("读取本地订阅配置文件错误:%s", err)
 		return
 	}
 
-	var failures []mikan.BangumiBase
+	var failures []model.BangumiBase
 	for _, s := range subscription {
 		fn := s.ConfigFileName()
 		if err := path.DeleteJSONConfigFile(fn); err != nil {
@@ -50,7 +50,7 @@ func removeAll() {
 }
 
 func remove(id int) {
-	var subscription []mikan.BangumiBase
+	var subscription []model.BangumiBase
 	if err := path.ReadJSONConfigFile(path.SubscriptionConfigFile, &subscription); err != nil {
 		console.Errorf("读取本地订阅配置文件错误:%s", err)
 		return
@@ -71,10 +71,10 @@ func remove(id int) {
 	console.Successf("取消订阅 %d 成功", id)
 }
 
-func removeByID(subscription []mikan.BangumiBase, id int) []mikan.BangumiBase {
+func removeByID(subscription []model.BangumiBase, id int) []model.BangumiBase {
 	ids := fmt.Sprintf("%d", id)
 
-	var res []mikan.BangumiBase
+	var res []model.BangumiBase
 	for _, s := range subscription {
 		if s.ID != ids {
 			res = append(res, s)
