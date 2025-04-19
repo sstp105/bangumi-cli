@@ -44,6 +44,11 @@ func writeFile(t *testing.T, path, content string) {
 	require.NoError(t, os.WriteFile(path, []byte(content), 0644))
 }
 
+func removeFile(t *testing.T, path string) {
+	t.Helper()
+	require.NoError(t, os.Remove(path))
+}
+
 func TestNewHandler(t *testing.T) {
 	originalRunningOS := path.RunningOS
 	originalProviders := path.OSPathProviders
@@ -133,7 +138,33 @@ func TestNewHandler(t *testing.T) {
 }
 
 func TestHandler_Run(t *testing.T) {
-	t.Run("get bangumi.tv collection status error", func(t *testing.T) {
+	tmpDir := t.TempDir()
+	setup := func(t *testing.T) (*Handler, string) {
+		// create necessary config files
+		writeFile(t, filepath.Join(tmpDir, path.BangumiCredentialConfigFile), `{
+			"access_token": "mock-access-token",
+			"refresh_token": "mock-refresh-token",
+			"expires_in": 604800,
+			"token_type": "Bearer",
+			"expires_until": "2030-04-22T19:41:00.561143-07:00"
+		}`)
+
+		writeFile(t, filepath.Join(tmpDir, path.SubscriptionConfigFile), `[{
+			"id": "3519",
+			"name": "金牌得主",
+			"link": "/Home/Bangumi/3519"
+		}]`)
+
+		writeFile(t, filepath.Join(tmpDir, "3519.json"), `{
+			"id": "3519",
+			"name": "金牌得主",
+			"link": "/Home/Bangumi/3519",
+			"bangumi_id": "430699",
+			"rss_link": "/RSS/Bangumi?bangumiId=3519\u0026subgroupid=382"
+		}`)
+
+		setMockPathProvider(t, tmpDir)
+
 		h := &Handler{
 			username:       "mock-username",
 			collectionType: bangumi.SubjectCollectionType(3),
@@ -147,32 +178,43 @@ func TestHandler_Run(t *testing.T) {
 			client: newMockClient(),
 		}
 
-		tmpDir := t.TempDir()
+		return h, tmpDir
+	}
 
-		credential := `{
-			"access_token": "mock-access-token",
-			"refresh_token": "mock-refresh-token",
-			"expires_in": 604800,
-			"token_type": "Bearer",
-			"expires_until": "2030-04-22T19:41:00.561143-07:00"
-		}`
-		writeFile(t, filepath.Join(tmpDir, path.BangumiCredentialConfigFile), credential)
-
-		subscription := `[{"id":"3519","name":"金牌得主","link":"/Home/Bangumi/3519"}]`
-		writeFile(t, filepath.Join(tmpDir, path.SubscriptionConfigFile), subscription)
-
-		config := `{
-		"id": "3519",
-		"name": "金牌得主",
-		"link": "/Home/Bangumi/3519",
-		"bangumi_id": "430699",
-		"rss_link": "/RSS/Bangumi?bangumiId=3519\u0026subgroupid=382"
-	}`
-		writeFile(t, filepath.Join(tmpDir, "3519.json"), config)
-
-		setMockPathProvider(t, tmpDir)
-
+	t.Run("returns error when bangumi config does not exist", func(t *testing.T) {
+		h, _ := setup(t)
 		defer httpmock.DeactivateAndReset()
+
+		// remove from setup
+		removeFile(t, filepath.Join(tmpDir, "3519.json"))
+
+		err := h.Run()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to read bangumi config file")
+	})
+
+	t.Run("returns error when bangumi id does not exist in config file", func(t *testing.T) {
+		h, _ := setup(t)
+		defer httpmock.DeactivateAndReset()
+
+		// overwrite
+		writeFile(t, filepath.Join(tmpDir, "3519.json"), `{
+			"id": "3519",
+			"name": "金牌得主",
+			"link": "/Home/Bangumi/3519",
+			"bangumi_id": "",
+			"rss_link": "/RSS/Bangumi?bangumiId=3519\u0026subgroupid=382"
+		}`)
+
+		err := h.Run()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "bangumi id is empty")
+	})
+
+	t.Run("returns error when bangumi API fails to fetch collection status", func(t *testing.T) {
+		h, _ := setup(t)
+		defer httpmock.DeactivateAndReset()
+
 		httpmock.RegisterResponder(
 			"GET",
 			"https://api.bgm.tv/v0/users/mock-username/collections/430699",
@@ -184,57 +226,45 @@ func TestHandler_Run(t *testing.T) {
 
 		err := h.Run()
 		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to fetch collection status")
 	})
 
-	t.Run("success", func(t *testing.T) {
-		h := &Handler{
-			username:       "mock-username",
-			collectionType: bangumi.SubjectCollectionType(3),
-			subscription: []model.BangumiBase{
-				{
-					ID:   "3519",
-					Name: "金牌得主",
-					Link: "/Home/Bangumi/3519",
-				},
-			},
-			client: newMockClient(),
-		}
-
-		tmpDir := t.TempDir()
-
-		credential := `{
-			"access_token": "mock-access-token",
-			"refresh_token": "mock-refresh-token",
-			"expires_in": 604800,
-			"token_type": "Bearer",
-			"expires_until": "2030-04-22T19:41:00.561143-07:00"
-		}`
-		writeFile(t, filepath.Join(tmpDir, path.BangumiCredentialConfigFile), credential)
-
-		subscription := `[{"id":"3519","name":"金牌得主","link":"/Home/Bangumi/3519"}]`
-		writeFile(t, filepath.Join(tmpDir, path.SubscriptionConfigFile), subscription)
-
-		config := `{
-		"id": "3519",
-		"name": "金牌得主",
-		"link": "/Home/Bangumi/3519",
-		"bangumi_id": "430699",
-		"rss_link": "/RSS/Bangumi?bangumiId=3519\u0026subgroupid=382"
-	}`
-		writeFile(t, filepath.Join(tmpDir, "3519.json"), config)
-
-		setMockPathProvider(t, tmpDir)
-
+	t.Run("successfully create collection status", func(t *testing.T) {
+		h, _ := setup(t)
 		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder(
+			"GET",
+			"https://api.bgm.tv/v0/users/mock-username/collections/430699",
+			httpmock.NewJsonResponderOrPanic(404, map[string]string{
+				"title":       "Not Found",
+				"description": "The subject is not collected by user",
+			}),
+		)
+
+		httpmock.RegisterResponder(
+			"POST",
+			"https://api.bgm.tv/v0/users/-/collections/430699",
+			httpmock.NewStringResponder(200, ""),
+		)
+
+		err := h.Run()
+		require.NoError(t, err)
+	})
+
+	t.Run("successfully updates collection status", func(t *testing.T) {
+		h, _ := setup(t)
+		defer httpmock.DeactivateAndReset()
+
 		httpmock.RegisterResponder(
 			"GET",
 			"https://api.bgm.tv/v0/users/mock-username/collections/430699",
 			httpmock.NewJsonResponderOrPanic(200, map[string]interface{}{
 				"subject": map[string]interface{}{
+					"id":      430699,
+					"type":    2,
 					"name":    "メダリスト",
 					"name_cn": "金牌得主",
-					"type":    2,
-					"id":      430699,
 				},
 				"type": 3,
 			}),
@@ -243,7 +273,8 @@ func TestHandler_Run(t *testing.T) {
 		httpmock.RegisterResponder(
 			"PATCH",
 			"https://api.bgm.tv/v0/users/-/collections/430699",
-			httpmock.NewStringResponder(200, ""))
+			httpmock.NewStringResponder(200, ""),
+		)
 
 		err := h.Run()
 		require.NoError(t, err)

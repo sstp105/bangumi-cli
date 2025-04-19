@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/handler/collecthandler"
 	"github.com/sstp105/bangumi-cli/internal/log"
 )
@@ -22,14 +21,13 @@ Summary:
   bangumi collect -u username -t 3 将批量同步 mikan 订阅的番剧到bangumi.tv 用户 username 在看状态。
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		t := bangumi.SubjectCollectionType(collectionType)
-
-		h, err := collecthandler.NewHandler(username, t)
+		h, err := collecthandler.NewHandler(username, collectionType)
 		if err != nil {
-			log.Fatalf("failed to init collect handler: %v", err)
+			log.Errorf("初始化 collecthandler.NewHandler 错误: %s", err)
+			return
 		}
 
-		h.Run()
+		_ = h.Run()
 	},
 }
 

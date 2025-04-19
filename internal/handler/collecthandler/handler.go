@@ -16,11 +16,12 @@ type Handler struct {
 	client         *bangumi.Client
 }
 
-func NewHandler(username string, collectionType bangumi.SubjectCollectionType) (*Handler, error) {
+func NewHandler(username string, t int) (*Handler, error) {
 	if username == "" {
 		return nil, errors.New("username is empty")
 	}
 
+	collectionType := bangumi.SubjectCollectionType(t)
 	if !collectionType.IsValid() {
 		return nil, fmt.Errorf("invalid collection type %d", collectionType)
 	}
@@ -113,8 +114,13 @@ func (h *Handler) collect(id string) error {
 func getBangumiID(fn string) (string, error) {
 	var b model.Bangumi
 	if err := path.ReadJSONConfigFile(fn, &b); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to read bangumi config file:%w", err)
 	}
 
-	return b.BangumiID, nil
+	id := b.BangumiID
+	if id == "" {
+		return "", errors.New("bangumi id is empty")
+	}
+
+	return id, nil
 }
