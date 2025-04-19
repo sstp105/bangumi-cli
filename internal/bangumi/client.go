@@ -2,9 +2,9 @@ package bangumi
 
 import (
 	"fmt"
-
 	"github.com/go-resty/resty/v2"
 	"github.com/sstp105/bangumi-cli/internal/libs"
+	"net/http"
 )
 
 const (
@@ -38,18 +38,24 @@ func WithAuthorization(credential OAuthCredential) Option {
 	}
 }
 
+func WithClient(client *http.Client) Option {
+	return func(c *Client) {
+		c.client = resty.NewWithClient(client)
+	}
+}
+
 func NewClient(opts ...Option) *Client {
 	c := &Client{}
 
 	client := resty.New()
-	client.SetBaseURL(baseURL)
-	client.SetHeaders(headers)
+	c.client = client
 
 	for _, opt := range opts {
 		opt(c)
 	}
 
-	c.client = client
+	c.client.SetBaseURL(baseURL)
+	c.client.SetHeaders(headers)
 
 	return c
 }

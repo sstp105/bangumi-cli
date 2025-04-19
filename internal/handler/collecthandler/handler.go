@@ -53,34 +53,39 @@ func NewHandler(username string, collectionType bangumi.SubjectCollectionType) (
 	}, nil
 }
 
-func (h *Handler) Run() {
-	var errs []error
+func (h *Handler) Run() error {
+	var errs model.ProcessErrors
 
 	for _, s := range h.subscription {
 		if err := h.process(s); err != nil {
-			log.Errorf("处理 %s 时出错:%s", s.Name, err)
-			errs = append(errs, err)
+			log.Errorf("处理[%s]时出错:%s", s.Name, err)
+			errs = append(errs, model.ProcessError{
+				Name: s.Name,
+				Err:  err,
+			})
 		}
 	}
 
-	if len(errs) == 0 {
-		log.Successf("已同步 mikan 订阅的番剧到 bangumi %s, 任务完成!", h.collectionType.String())
+	if errs != nil {
+		log.Errorf("共有 %d 个番剧处理失败: \n%s", len(errs), errs.String())
+		return errs
 	}
+
+	log.Successf("已成功同步 mikan 订阅的番剧到 bangumi %s, 任务完成!", h.collectionType.String())
+	return nil
 }
 
 func (h *Handler) process(s model.BangumiBase) error {
 	id, err := getBangumiID(s.ConfigFileName())
 	if err != nil {
-		log.Errorf("error getting bangumi id: %v", err)
-		return err
+		return fmt.Errorf("failed to get bangumi id:%w", err)
 	}
 
 	if err = h.collect(id); err != nil {
-		log.Errorf("error collecting subject %s", id)
-		return err
+		return fmt.Errorf("failed to collect bangumi %s:%w", id, err)
 	}
 
-	log.Infof("收藏 %s 成功 (%s)", s.Name, h.collectionType.String())
+	log.Infof("成功收藏[%s]为[%s]", s.Name, h.collectionType.String())
 
 	return nil
 }
@@ -92,17 +97,16 @@ func (h *Handler) collect(id string) error {
 
 	collection, err := h.client.GetUserCollection(h.username, id)
 	if err != nil {
-		log.Errorf("error fetching user %s collection status for %s:%s", h.username, id, err)
-		return err
+		return fmt.Errorf("failed to fetch collection status:%w", err)
 	}
 
 	// if user has not collected before, create the collection
 	if collection == nil {
-		log.Debugf("user %s has not collected %s before, creating collection", h.username, id)
+		log.Debugf("用户 %s 尚未收藏番剧 %s，正在创建收藏...", h.username, id)
 		return h.client.PostUserCollection(id, payload)
 	}
 
-	log.Debugf("user %s already collected %s, updating collection status to %s", h.username, id, h.collectionType)
+	log.Debugf("用户 %s 已收藏番剧 %s，正在更新收藏状态为 %s...", h.username, id, h.collectionType)
 	return h.client.PatchUserCollection(id, payload)
 }
 

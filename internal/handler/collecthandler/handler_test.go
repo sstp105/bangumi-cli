@@ -1,6 +1,9 @@
 package collecthandler
 
 import (
+	"github.com/go-resty/resty/v2"
+	"github.com/jarcoal/httpmock"
+	"github.com/sstp105/bangumi-cli/internal/model"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,6 +19,12 @@ type mockPathProvider struct {
 
 func (m mockPathProvider) ConfigPath() (string, error) {
 	return m.configPathFunc()
+}
+
+func newMockClient() *bangumi.Client {
+	client := resty.New()
+	httpmock.ActivateNonDefault(client.GetClient())
+	return bangumi.NewClient(bangumi.WithClient(client.GetClient()))
 }
 
 func setMockPathProvider(t *testing.T, configDir string) {
@@ -120,5 +129,123 @@ func TestNewHandler(t *testing.T) {
 		require.Equal(t, bangumi.SubjectCollectionType(3), h.collectionType)
 		require.NotNil(t, h.subscription)
 		require.NotNil(t, h.client)
+	})
+}
+
+func TestHandler_Run(t *testing.T) {
+	t.Run("get bangumi.tv collection status error", func(t *testing.T) {
+		h := &Handler{
+			username:       "mock-username",
+			collectionType: bangumi.SubjectCollectionType(3),
+			subscription: []model.BangumiBase{
+				{
+					ID:   "3519",
+					Name: "金牌得主",
+					Link: "/Home/Bangumi/3519",
+				},
+			},
+			client: newMockClient(),
+		}
+
+		tmpDir := t.TempDir()
+
+		credential := `{
+			"access_token": "mock-access-token",
+			"refresh_token": "mock-refresh-token",
+			"expires_in": 604800,
+			"token_type": "Bearer",
+			"expires_until": "2030-04-22T19:41:00.561143-07:00"
+		}`
+		writeFile(t, filepath.Join(tmpDir, path.BangumiCredentialConfigFile), credential)
+
+		subscription := `[{"id":"3519","name":"金牌得主","link":"/Home/Bangumi/3519"}]`
+		writeFile(t, filepath.Join(tmpDir, path.SubscriptionConfigFile), subscription)
+
+		config := `{
+		"id": "3519",
+		"name": "金牌得主",
+		"link": "/Home/Bangumi/3519",
+		"bangumi_id": "430699",
+		"rss_link": "/RSS/Bangumi?bangumiId=3519\u0026subgroupid=382"
+	}`
+		writeFile(t, filepath.Join(tmpDir, "3519.json"), config)
+
+		setMockPathProvider(t, tmpDir)
+
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(
+			"GET",
+			"https://api.bgm.tv/v0/users/mock-username/collections/430699",
+			httpmock.NewJsonResponderOrPanic(502, map[string]string{
+				"title":       "Bad Gateway",
+				"description": "The server is under maintenance",
+			}),
+		)
+
+		err := h.Run()
+		require.Error(t, err)
+	})
+
+	t.Run("success", func(t *testing.T) {
+		h := &Handler{
+			username:       "mock-username",
+			collectionType: bangumi.SubjectCollectionType(3),
+			subscription: []model.BangumiBase{
+				{
+					ID:   "3519",
+					Name: "金牌得主",
+					Link: "/Home/Bangumi/3519",
+				},
+			},
+			client: newMockClient(),
+		}
+
+		tmpDir := t.TempDir()
+
+		credential := `{
+			"access_token": "mock-access-token",
+			"refresh_token": "mock-refresh-token",
+			"expires_in": 604800,
+			"token_type": "Bearer",
+			"expires_until": "2030-04-22T19:41:00.561143-07:00"
+		}`
+		writeFile(t, filepath.Join(tmpDir, path.BangumiCredentialConfigFile), credential)
+
+		subscription := `[{"id":"3519","name":"金牌得主","link":"/Home/Bangumi/3519"}]`
+		writeFile(t, filepath.Join(tmpDir, path.SubscriptionConfigFile), subscription)
+
+		config := `{
+		"id": "3519",
+		"name": "金牌得主",
+		"link": "/Home/Bangumi/3519",
+		"bangumi_id": "430699",
+		"rss_link": "/RSS/Bangumi?bangumiId=3519\u0026subgroupid=382"
+	}`
+		writeFile(t, filepath.Join(tmpDir, "3519.json"), config)
+
+		setMockPathProvider(t, tmpDir)
+
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder(
+			"GET",
+			"https://api.bgm.tv/v0/users/mock-username/collections/430699",
+			httpmock.NewJsonResponderOrPanic(200, map[string]interface{}{
+				"subject": map[string]interface{}{
+					"name":    "メダリスト",
+					"name_cn": "金牌得主",
+					"type":    2,
+					"id":      430699,
+				},
+				"type": 3,
+			}),
+		)
+
+		httpmock.RegisterResponder(
+			"PATCH",
+			"https://api.bgm.tv/v0/users/-/collections/430699",
+			httpmock.NewStringResponder(200, ""))
+
+		err := h.Run()
+		require.NoError(t, err)
 	})
 }
