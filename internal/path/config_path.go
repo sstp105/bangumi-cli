@@ -3,6 +3,7 @@ package path
 import (
 	"encoding/json"
 	"errors"
+	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/libs"
 	"github.com/sstp105/bangumi-cli/internal/model"
 	"os"
@@ -23,7 +24,7 @@ func (w WindowsPath) ConfigPath() (string, error) {
 }
 
 func (m MacOSPath) ConfigPath() (string, error) {
-	dir := os.Getenv("Home")
+	dir := os.Getenv("HOME")
 	if dir == "" {
 		return "", errors.New("$HOME is not defined")
 	}
@@ -93,8 +94,20 @@ func ReadSubscriptionConfigFile() ([]model.BangumiBase, error) {
 	return subscription, nil
 }
 
+func ReadBangumiCredentialConfigFile() (*bangumi.OAuthCredential, error) {
+	var credential bangumi.OAuthCredential
+	err := ReadJSONConfigFile(BangumiCredentialConfigFile, &credential)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &credential, nil
+}
+
 func configPath() (string, error) {
-	provider, supported := osPathProviders[runningOS]
+	provider, supported := OSPathProviders[RunningOS]
 	if !supported {
 		return "", libs.ErrUnsupportedOS
 	}

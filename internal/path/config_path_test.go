@@ -40,7 +40,7 @@ func TestMacOSPath_ConfigPath(t *testing.T) {
 
 	t.Run("$HOME is set", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		require.NoError(t, os.Setenv("Home", tmpDir))
+		require.NoError(t, os.Setenv("HOME", tmpDir))
 		defer os.Setenv("HOME", env)
 
 		m := MacOSPath{}
@@ -51,8 +51,8 @@ func TestMacOSPath_ConfigPath(t *testing.T) {
 	})
 
 	t.Run("$HOME is not set", func(t *testing.T) {
-		require.NoError(t, os.Unsetenv("Home"))
-		defer os.Setenv("HoME", env)
+		require.NoError(t, os.Unsetenv("HOME"))
+		defer os.Setenv("HOME", env)
 
 		m := MacOSPath{}
 		_, err := m.ConfigPath()
@@ -62,26 +62,18 @@ func TestMacOSPath_ConfigPath(t *testing.T) {
 	})
 }
 
-type mockPathProvider struct {
-	configPathFunc func() (string, error)
-}
-
-func (m mockPathProvider) ConfigPath() (string, error) {
-	return m.configPathFunc()
-}
-
 func TestConfigPath(t *testing.T) {
-	originalRunningOS := runningOS
-	originalProviders := osPathProviders
+	originalRunningOS := RunningOS
+	originalProviders := OSPathProviders
 
 	defer func() {
-		runningOS = originalRunningOS
-		osPathProviders = originalProviders
+		RunningOS = originalRunningOS
+		OSPathProviders = originalProviders
 	}()
 
 	t.Run("supported OS with successful path provider", func(t *testing.T) {
-		runningOS = "macos"
-		osPathProviders = map[string]Provider{
+		RunningOS = "macos"
+		OSPathProviders = map[string]Provider{
 			"macos": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return "/Users/test/.config/mock-app-name", nil
@@ -96,8 +88,8 @@ func TestConfigPath(t *testing.T) {
 	})
 
 	t.Run("supported OS but provider returns error", func(t *testing.T) {
-		runningOS = "windows"
-		osPathProviders = map[string]Provider{
+		RunningOS = "windows"
+		OSPathProviders = map[string]Provider{
 			"windows": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return "", errors.New("%AppData% is not defined")
@@ -112,8 +104,8 @@ func TestConfigPath(t *testing.T) {
 	})
 
 	t.Run("unsupported OS", func(t *testing.T) {
-		runningOS = "plan9"
-		osPathProviders = map[string]Provider{}
+		RunningOS = "plan9"
+		OSPathProviders = map[string]Provider{}
 
 		_, err := configPath()
 
@@ -123,12 +115,12 @@ func TestConfigPath(t *testing.T) {
 }
 
 func TestReadJSONConfigFile(t *testing.T) {
-	originalRunningOS := runningOS
-	originalProviders := osPathProviders
+	originalRunningOS := RunningOS
+	originalProviders := OSPathProviders
 
 	defer func() {
-		runningOS = originalRunningOS
-		osPathProviders = originalProviders
+		RunningOS = originalRunningOS
+		OSPathProviders = originalProviders
 	}()
 
 	type Config struct {
@@ -143,8 +135,8 @@ func TestReadJSONConfigFile(t *testing.T) {
 		expected := `{"test": true}`
 		require.NoError(t, os.WriteFile(fullPath, []byte(expected), 0644))
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, nil
@@ -161,8 +153,8 @@ func TestReadJSONConfigFile(t *testing.T) {
 	t.Run("configPath returns error", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, os.ErrPermission
@@ -179,8 +171,8 @@ func TestReadJSONConfigFile(t *testing.T) {
 	t.Run("file does not exist", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, nil
@@ -201,8 +193,8 @@ func TestReadJSONConfigFile(t *testing.T) {
 
 		require.NoError(t, os.WriteFile(fullPath, []byte(`{invalid_json}`), 0644))
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, nil
@@ -217,12 +209,12 @@ func TestReadJSONConfigFile(t *testing.T) {
 }
 
 func TestDeleteJSONConfigFile(t *testing.T) {
-	originalRunningOS := runningOS
-	originalProviders := osPathProviders
+	originalRunningOS := RunningOS
+	originalProviders := OSPathProviders
 
 	defer func() {
-		runningOS = originalRunningOS
-		osPathProviders = originalProviders
+		RunningOS = originalRunningOS
+		OSPathProviders = originalProviders
 	}()
 
 	t.Run("successful delete", func(t *testing.T) {
@@ -233,8 +225,8 @@ func TestDeleteJSONConfigFile(t *testing.T) {
 		// create the tmp file to delete
 		require.NoError(t, os.WriteFile(fullPath, []byte(`{"test": true}`), 0644))
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, nil
@@ -252,8 +244,8 @@ func TestDeleteJSONConfigFile(t *testing.T) {
 	t.Run("delete file errors", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, os.ErrPermission
@@ -269,8 +261,8 @@ func TestDeleteJSONConfigFile(t *testing.T) {
 	t.Run("file does not exist", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, nil
@@ -285,12 +277,12 @@ func TestDeleteJSONConfigFile(t *testing.T) {
 }
 
 func TestSaveJSONConfigFile(t *testing.T) {
-	originalRunningOS := runningOS
-	originalProviders := osPathProviders
+	originalRunningOS := RunningOS
+	originalProviders := OSPathProviders
 
 	defer func() {
-		runningOS = originalRunningOS
-		osPathProviders = originalProviders
+		RunningOS = originalRunningOS
+		OSPathProviders = originalProviders
 	}()
 
 	type Config struct {
@@ -302,8 +294,8 @@ func TestSaveJSONConfigFile(t *testing.T) {
 		tmpFile := "config.json"
 		fullPath := filepath.Join(tmpDir, tmpFile)
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, nil
@@ -321,8 +313,8 @@ func TestSaveJSONConfigFile(t *testing.T) {
 	})
 
 	t.Run("configPath returns error", func(t *testing.T) {
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return "", os.ErrPermission
@@ -339,8 +331,8 @@ func TestSaveJSONConfigFile(t *testing.T) {
 	t.Run("folder creation error", func(t *testing.T) {
 		badPath := string([]byte{0}) // invalid path on most systems
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return badPath, nil
@@ -354,8 +346,8 @@ func TestSaveJSONConfigFile(t *testing.T) {
 	})
 
 	t.Run("marshal error", func(t *testing.T) {
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return t.TempDir(), nil
@@ -374,12 +366,12 @@ func TestSaveJSONConfigFile(t *testing.T) {
 }
 
 func TestReadSubscriptionConfigFile(t *testing.T) {
-	originalRunningOS := runningOS
-	originalProviders := osPathProviders
+	originalRunningOS := RunningOS
+	originalProviders := OSPathProviders
 
 	defer func() {
-		runningOS = originalRunningOS
-		osPathProviders = originalProviders
+		RunningOS = originalRunningOS
+		OSPathProviders = originalProviders
 	}()
 
 	t.Run("successful read and parse", func(t *testing.T) {
@@ -394,8 +386,8 @@ func TestReadSubscriptionConfigFile(t *testing.T) {
 
 		require.NoError(t, os.WriteFile(tmpFile, []byte(content), 0644))
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, nil
@@ -414,8 +406,8 @@ func TestReadSubscriptionConfigFile(t *testing.T) {
 	t.Run("file not exist returns nil, nil", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, nil
@@ -434,8 +426,8 @@ func TestReadSubscriptionConfigFile(t *testing.T) {
 
 		require.NoError(t, os.WriteFile(tmpFile, []byte(`{ invalid json ]`), 0644))
 
-		runningOS = "mockOS"
-		osPathProviders = map[string]Provider{
+		RunningOS = "mockOS"
+		OSPathProviders = map[string]Provider{
 			"mockOS": mockPathProvider{
 				configPathFunc: func() (string, error) {
 					return tmpDir, nil
@@ -447,4 +439,12 @@ func TestReadSubscriptionConfigFile(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, got)
 	})
+}
+
+type mockPathProvider struct {
+	configPathFunc func() (string, error)
+}
+
+func (m mockPathProvider) ConfigPath() (string, error) {
+	return m.configPathFunc()
 }

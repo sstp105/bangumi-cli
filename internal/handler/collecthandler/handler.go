@@ -2,6 +2,7 @@ package collecthandler
 
 import (
 	"errors"
+	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/model"
@@ -21,20 +22,28 @@ func NewHandler(username string, collectionType bangumi.SubjectCollectionType) (
 	}
 
 	if !collectionType.IsValid() {
-		return nil, errors.New("invalid collection type %d")
+		return nil, fmt.Errorf("invalid collection type %d", collectionType)
 	}
 
-	var subscription []model.BangumiBase
-	if err := path.ReadJSONConfigFile(path.SubscriptionConfigFile, &subscription); err != nil {
+	subscription, err := path.ReadSubscriptionConfigFile()
+	if err != nil {
 		return nil, err
 	}
 
-	var credential bangumi.OAuthCredential
-	if err := path.ReadJSONConfigFile(path.BangumiCredentialConfigFile, &credential); err != nil {
+	if subscription == nil {
+		return nil, errors.New("subscription config file is empty")
+	}
+
+	credential, err := path.ReadBangumiCredentialConfigFile()
+	if err != nil {
 		return nil, err
 	}
 
-	client := bangumi.NewClient(bangumi.WithAuthorization(credential))
+	if credential == nil {
+		return nil, errors.New("credential config file is empty")
+	}
+
+	client := bangumi.NewClient(bangumi.WithAuthorization(*credential))
 
 	return &Handler{
 		username:       username,
@@ -98,10 +107,10 @@ func (h *Handler) collect(id string) error {
 }
 
 func getBangumiID(fn string) (string, error) {
-	var subject model.Bangumi
-	if err := path.ReadJSONConfigFile(fn, &subject); err != nil {
+	var b model.Bangumi
+	if err := path.ReadJSONConfigFile(fn, &b); err != nil {
 		return "", err
 	}
 
-	return subject.BangumiID, nil
+	return b.BangumiID, nil
 }

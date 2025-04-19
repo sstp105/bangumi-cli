@@ -7,9 +7,9 @@ const (
 )
 
 var (
-	runningOS = runtime.GOOS
+	RunningOS = runtime.GOOS
 
-	osPathProviders = map[string]Provider{
+	OSPathProviders = map[string]Provider{
 		"windows": WindowsPath{},
 		"darwin":  MacOSPath{},
 	}
