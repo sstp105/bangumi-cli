@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
-	"github.com/sstp105/bangumi-cli/internal/parser"
+	"github.com/sstp105/bangumi-cli/internal/libs"
 	htmlutil "html"
 	"strings"
 )
@@ -105,7 +105,7 @@ func ParseBangumiID(doc *goquery.Document) (string, error) {
 			return
 		}
 
-		id, err := parser.ParseSuffixID(href)
+		id, err := libs.ParseSuffixID(href)
 		if err != nil {
 			return
 		}
@@ -147,7 +147,7 @@ func parseMyBangumi(s *goquery.Selection) (*BangumiBase, error) {
 	}
 	name = htmlutil.UnescapeString(name) // mikan bangumi title are escaped
 
-	id, err := parser.ParseSuffixID(href)
+	id, err := libs.ParseSuffixID(href)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse bangumi id: %w", err)
 	}

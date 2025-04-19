@@ -7,14 +7,12 @@ import (
 	"strings"
 )
 
-// RSS represents the root rss structure.
 type RSS struct {
 	XMLName xml.Name `xml:"rss"`
 	Version string   `xml:"version,attr"`
 	Channel Channel  `xml:"channel"`
 }
 
-// Channel represents the channel information in an RSS feed.
 type Channel struct {
 	Title       string `xml:"title"`
 	Link        string `xml:"link"`
@@ -22,7 +20,6 @@ type Channel struct {
 	Items       []Item `xml:"item"`
 }
 
-// Item represents a single entry in an RSS feed.
 type Item struct {
 	Title       string    `xml:"title"`
 	Link        string    `xml:"link"`
@@ -32,7 +29,6 @@ type Item struct {
 	Enclosure   Enclosure `xml:"enclosure"`
 }
 
-// Enclosure represents media information within an RSS item.
 type Enclosure struct {
 	// URL is the torrent file downloadable url.
 	URL string `xml:"url,attr"`
@@ -41,7 +37,7 @@ type Enclosure struct {
 	Length string `xml:"length,attr"`
 }
 
-func (r *RSS) String() string {
+func (r RSS) String() string {
 	var buf bytes.Buffer
 	for _, item := range r.Channel.Items {
 		buf.WriteString(fmt.Sprintf("%s\n", item.Title))
@@ -49,7 +45,7 @@ func (r *RSS) String() string {
 	return buf.String()
 }
 
-func (r *RSS) Torrents() []string {
+func (r RSS) TorrentURLs() []string {
 	var urls []string
 	for _, item := range r.Channel.Items {
 		urls = append(urls, item.Enclosure.URL)
@@ -57,8 +53,7 @@ func (r *RSS) Torrents() []string {
 	return urls
 }
 
-// Filter filters the RSS items based on the provided filters.
-func Filter(r RSS, filters Filters) RSS {
+func (r RSS) Filter(filters Filters) RSS {
 	var items []Item
 
 	for _, item := range r.Channel.Items {

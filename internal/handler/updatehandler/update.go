@@ -76,7 +76,7 @@ func (h *Handler) update(bb mikan.BangumiBase) error {
 }
 
 func (h *Handler) diff(rss mikan.RSS, filters mikan.Filters, torrents []string) (map[string]string, error) {
-	r := mikan.Filter(rss, filters)
+	r := rss.Filter(filters)
 
 	mp := make(map[string]string) // key:hash, value:name
 	for _, item := range r.Channel.Items {

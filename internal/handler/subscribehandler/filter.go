@@ -21,13 +21,13 @@ func filter(rss mikan.RSS) ([]string, *mikan.Filters) {
 	console.Info("筛选后的结果如下:")
 	filteredRSS(r)
 
-	torrents := r.Torrents()
+	torrents := r.TorrentURLs()
 
 	return torrents, &filters
 }
 
 func applyFilters(rss mikan.RSS, filters mikan.Filters) mikan.RSS {
-	return mikan.Filter(rss, filters)
+	return rss.Filter(filters)
 }
 
 func promptFilters() mikan.Filters {

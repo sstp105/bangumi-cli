@@ -5,8 +5,8 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/config"
 	"github.com/sstp105/bangumi-cli/internal/console"
+	"github.com/sstp105/bangumi-cli/internal/libs"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
-	"github.com/sstp105/bangumi-cli/internal/parser"
 	"github.com/sstp105/bangumi-cli/internal/path"
 	"github.com/sstp105/bangumi-cli/internal/prompt"
 	"github.com/sstp105/bangumi-cli/internal/season"
@@ -137,7 +137,7 @@ func (h *Handler) fetch() ([]mikan.BangumiBase, error) {
 		return nil, err
 	}
 
-	html, err := parser.ParseHTML(resp)
+	html, err := libs.ParseHTML(resp)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func (h *Handler) parse(b mikan.BangumiBase) (*mikan.Bangumi, error) {
 		return nil, err
 	}
 
-	html, err := parser.ParseHTML(resp)
+	html, err := libs.ParseHTML(resp)
 	if err != nil {
 		return nil, err
 	}
