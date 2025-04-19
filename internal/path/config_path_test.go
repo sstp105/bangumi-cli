@@ -121,3 +121,330 @@ func TestConfigPath(t *testing.T) {
 		require.Equal(t, libs.ErrUnsupportedOS, err)
 	})
 }
+
+func TestReadJSONConfigFile(t *testing.T) {
+	originalRunningOS := runningOS
+	originalProviders := osPathProviders
+
+	defer func() {
+		runningOS = originalRunningOS
+		osPathProviders = originalProviders
+	}()
+
+	type Config struct {
+		Test bool `json:"test"`
+	}
+
+	t.Run("successful read and unmarshal", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		tmpFile := "test_config.json"
+		fullPath := filepath.Join(tmpDir, tmpFile)
+
+		expected := `{"test": true}`
+		require.NoError(t, os.WriteFile(fullPath, []byte(expected), 0644))
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, nil
+				},
+			},
+		}
+
+		var cfg Config
+		err := ReadJSONConfigFile(tmpFile, &cfg)
+		require.NoError(t, err)
+		require.True(t, cfg.Test)
+	})
+
+	t.Run("configPath returns error", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, os.ErrPermission
+				},
+			},
+		}
+
+		var cfg Config
+		err := ReadJSONConfigFile("irrelevant.json", &cfg)
+		require.Error(t, err)
+		require.Equal(t, os.ErrPermission, err)
+	})
+
+	t.Run("file does not exist", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, nil
+				},
+			},
+		}
+
+		var cfg Config
+		err := ReadJSONConfigFile("nonexistent.json", &cfg)
+		require.Error(t, err)
+		require.True(t, os.IsNotExist(err))
+	})
+
+	t.Run("invalid JSON format", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		tmpFile := "bad.json"
+		fullPath := filepath.Join(tmpDir, tmpFile)
+
+		require.NoError(t, os.WriteFile(fullPath, []byte(`{invalid_json}`), 0644))
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, nil
+				},
+			},
+		}
+
+		var cfg Config
+		err := ReadJSONConfigFile(tmpFile, &cfg)
+		require.Error(t, err)
+	})
+}
+
+func TestDeleteJSONConfigFile(t *testing.T) {
+	originalRunningOS := runningOS
+	originalProviders := osPathProviders
+
+	defer func() {
+		runningOS = originalRunningOS
+		osPathProviders = originalProviders
+	}()
+
+	t.Run("successful delete", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		tmpFile := "test_config.json"
+		fullPath := filepath.Join(tmpDir, tmpFile)
+
+		// create the tmp file to delete
+		require.NoError(t, os.WriteFile(fullPath, []byte(`{"test": true}`), 0644))
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, nil
+				},
+			},
+		}
+
+		err := DeleteJSONConfigFile(tmpFile)
+		require.NoError(t, err)
+
+		_, err = os.Stat(fullPath)
+		require.True(t, os.IsNotExist(err))
+	})
+
+	t.Run("delete file errors", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, os.ErrPermission
+				},
+			},
+		}
+
+		err := DeleteJSONConfigFile("file-require-permission.json")
+		require.Error(t, err)
+		require.Equal(t, os.ErrPermission, err)
+	})
+
+	t.Run("file does not exist", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, nil
+				},
+			},
+		}
+
+		err := DeleteJSONConfigFile("non-existent-file.json")
+		require.Error(t, err)
+		require.True(t, os.IsNotExist(err))
+	})
+}
+
+func TestSaveJSONConfigFile(t *testing.T) {
+	originalRunningOS := runningOS
+	originalProviders := osPathProviders
+
+	defer func() {
+		runningOS = originalRunningOS
+		osPathProviders = originalProviders
+	}()
+
+	type Config struct {
+		Enabled bool `json:"enabled"`
+	}
+
+	t.Run("successful save", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		tmpFile := "config.json"
+		fullPath := filepath.Join(tmpDir, tmpFile)
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, nil
+				},
+			},
+		}
+
+		cfg := Config{Enabled: true}
+		err := SaveJSONConfigFile(tmpFile, cfg)
+		require.NoError(t, err)
+
+		data, err := os.ReadFile(fullPath)
+		require.NoError(t, err)
+		require.JSONEq(t, `{"enabled": true}`, string(data))
+	})
+
+	t.Run("configPath returns error", func(t *testing.T) {
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return "", os.ErrPermission
+				},
+			},
+		}
+
+		cfg := Config{Enabled: false}
+		err := SaveJSONConfigFile("any.json", cfg)
+		require.Error(t, err)
+		require.Equal(t, os.ErrPermission, err)
+	})
+
+	t.Run("folder creation error", func(t *testing.T) {
+		badPath := string([]byte{0}) // invalid path on most systems
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return badPath, nil
+				},
+			},
+		}
+
+		cfg := Config{Enabled: false}
+		err := SaveJSONConfigFile("file.json", cfg)
+		require.Error(t, err)
+	})
+
+	t.Run("marshal error", func(t *testing.T) {
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return t.TempDir(), nil
+				},
+			},
+		}
+
+		// Channels cannot be marshaled to JSON
+		cfg := struct {
+			Ch chan int `json:"ch"`
+		}{Ch: make(chan int)}
+
+		err := SaveJSONConfigFile("bad.json", cfg)
+		require.Error(t, err)
+	})
+}
+
+func TestReadSubscriptionConfigFile(t *testing.T) {
+	originalRunningOS := runningOS
+	originalProviders := osPathProviders
+
+	defer func() {
+		runningOS = originalRunningOS
+		osPathProviders = originalProviders
+	}()
+
+	t.Run("successful read and parse", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		tmpFile := filepath.Join(tmpDir, SubscriptionConfigFile)
+
+		content := `[{
+			"id": "233",
+			"name": "小林家的龙女仆",
+			"link": "https://mikan.example.com/bangumi/233"
+		}]`
+
+		require.NoError(t, os.WriteFile(tmpFile, []byte(content), 0644))
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, nil
+				},
+			},
+		}
+
+		got, err := ReadSubscriptionConfigFile()
+		require.NoError(t, err)
+		require.Len(t, got, 1)
+		require.Equal(t, "233", got[0].ID)
+		require.Equal(t, "小林家的龙女仆", got[0].Name)
+		require.Equal(t, "https://mikan.example.com/bangumi/233", got[0].Link)
+	})
+
+	t.Run("file not exist returns nil, nil", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, nil
+				},
+			},
+		}
+
+		got, err := ReadSubscriptionConfigFile()
+		require.NoError(t, err)
+		require.Nil(t, got)
+	})
+
+	t.Run("returns error for unreadable or bad format file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		tmpFile := filepath.Join(tmpDir, SubscriptionConfigFile)
+
+		require.NoError(t, os.WriteFile(tmpFile, []byte(`{ invalid json ]`), 0644))
+
+		runningOS = "mockOS"
+		osPathProviders = map[string]Provider{
+			"mockOS": mockPathProvider{
+				configPathFunc: func() (string, error) {
+					return tmpDir, nil
+				},
+			},
+		}
+
+		got, err := ReadSubscriptionConfigFile()
+		require.Error(t, err)
+		require.Nil(t, got)
+	})
+}
