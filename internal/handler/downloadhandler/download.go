@@ -24,7 +24,6 @@ func NewHandler() (*Handler, error) {
 		return nil, nil
 	}
 
-	// TODO: factory method that returns torrent.Client based on user input
 	client, err := torrent.NewQBittorrentClient(config.QBittorrentConfig())
 	if err != nil {
 		return nil, err
@@ -37,10 +36,17 @@ func NewHandler() (*Handler, error) {
 }
 
 func (h *Handler) Run() {
+	var errs []error
+
 	for _, s := range h.subscription {
 		if err := h.download(s); err != nil {
 			console.Errorf("%s 下载失败: %s", s.Name, err)
+			errs = append(errs, err)
 		}
+	}
+
+	if len(errs) == 0 {
+		console.Successf("任务已全部添加至 %s, 任务完成", h.client.Name())
 	}
 }
 

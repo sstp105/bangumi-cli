@@ -1,4 +1,4 @@
-package loghandler
+package loginhandler
 
 import (
 	"fmt"

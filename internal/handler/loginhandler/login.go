@@ -3,7 +3,6 @@ package loginhandler
 import (
 	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/console"
-	"github.com/sstp105/bangumi-cli/internal/handler/loghandler"
 	"github.com/sstp105/bangumi-cli/internal/libs"
 	"github.com/sstp105/bangumi-cli/internal/path"
 	"os"
@@ -19,7 +18,6 @@ var (
 	oauthURL libs.APIPath = "https://bgm.tv/oauth/authorize?client_id=%s&response_type=code&redirect_uri=%s"
 )
 
-// Run triggers bangumi login process.
 func Run() {
 	if err := authenticate(); err != nil {
 		console.Errorf("获取 bangumi 凭证失败:%s", err)
@@ -79,7 +77,7 @@ func oauth() (*bangumi.OAuthCredential, error) {
 
 	var credential *bangumi.OAuthCredential
 	go func() {
-		loghandler.Start(func(c *bangumi.OAuthCredential) {
+		Start(func(c *bangumi.OAuthCredential) {
 			credential = c
 			ch <- os.Interrupt
 		})
@@ -89,7 +87,7 @@ func oauth() (*bangumi.OAuthCredential, error) {
 	return credential, nil
 }
 
-// refresh uses refresh token to request new access token.
+// refresh uses refresh_token to request a new access token.
 func refresh(token string) (*bangumi.OAuthCredential, error) {
 	client := bangumi.NewOAuthClient()
 	credential, err := client.RefreshAccessToken(

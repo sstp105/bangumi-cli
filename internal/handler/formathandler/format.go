@@ -1,7 +1,6 @@
 package formathandler
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -47,7 +46,7 @@ func traverse(dir string) {
 func process(dir string) {
 	files, err := libs.FindFiles(dir, videoFormats)
 	if err != nil {
-		fmt.Printf("warning: no media files can be renamed in %s:%s\n", dir, err)
+		console.Errorf("%s 查找文件错误: %v", dir, err)
 		return
 	}
 
@@ -58,25 +57,23 @@ func process(dir string) {
 }
 
 func rename(files []string, dir string) {
-	fmt.Printf("Processing directory:%s\n", dir)
+	console.Plainf("处理:%s, 共 %d 个文件", dir, len(files))
 
 	// dry-run
 	paths, err := mediafmt.FormatFiles(files, dir, fmtter)
 	if err != nil {
-		fmt.Printf("error formatting files at %s:%s", dir, err)
+		console.Errorf("命名时出现错误, 路径: %s:%s", dir, err)
 		return
 	}
 
-	// ask user before rename files
-	if ok := prompt.Confirm("Do you want to proceed with renaming these files?"); !ok {
-		fmt.Printf("Cancelled rename process for %s", dir)
+	if proceed := prompt.Confirm("是否要继续这些命名?"); !proceed {
+		console.Info("命名已取消")
 		return
 	}
 
-	// rename each file
 	for i, f := range files {
 		if err := os.Rename(f, paths[i]); err != nil {
-			fmt.Printf("error renaming %s -> %s: %v\n", f, paths[i], err)
+			console.Errorf("命名 %s -> %s 时错误: %v\n", f, paths[i], err)
 		}
 	}
 }
