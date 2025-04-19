@@ -26,7 +26,7 @@ Summary:
 
 		h, err := collecthandler.NewHandler(username, t)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("failed to init collect handler: %v", err)
 		}
 
 		h.Run()

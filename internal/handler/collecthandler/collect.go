@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/console"
+	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/path"
 )
@@ -45,33 +46,35 @@ func NewHandler(username string, collectionType bangumi.SubjectCollectionType) (
 }
 
 func (h *Handler) Run() {
+	var errs []error
+
 	for _, s := range h.subscription {
 		if err := h.process(s); err != nil {
 			console.Errorf("处理 %s 时出错:%s", s.Name, err)
+			errs = append(errs, err)
 		}
+	}
+
+	if len(errs) == 0 {
+		console.Successf("已同步 mikan 订阅的番剧到 bangumi %s, 任务完成!", h.collectionType.String())
 	}
 }
 
 func (h *Handler) process(s model.BangumiBase) error {
-	id, err := read(s.ConfigFileName())
+	id, err := getBangumiID(s.ConfigFileName())
 	if err != nil {
+		log.Errorf("error getting bangumi id: %v", err)
 		return err
 	}
 
 	if err = h.collect(id); err != nil {
+		log.Errorf("error collecting subject %s", id)
 		return err
 	}
 
+	console.Infof("收藏 %s 成功 (%s)", s.Name, h.collectionType.String())
+
 	return nil
-}
-
-func read(fn string) (string, error) {
-	var subject model.Bangumi
-	if err := path.ReadJSONConfigFile(fn, &subject); err != nil {
-		return "", err
-	}
-
-	return subject.BangumiID, nil
 }
 
 func (h *Handler) collect(id string) error {
@@ -81,12 +84,25 @@ func (h *Handler) collect(id string) error {
 
 	collection, err := h.client.GetUserCollection(h.username, id)
 	if err != nil {
+		log.Errorf("error fetching user %s collection status for %s:%s", h.username, id, err)
 		return err
 	}
 
+	// if user has not collected before, create the collection
 	if collection == nil {
+		log.Debugf("user %s has not collected %s before, creating collection", h.username, id)
 		return h.client.PostUserCollection(id, payload)
 	}
 
+	log.Debugf("user %s already collected %s, updating collection status to %s", h.username, id, h.collectionType)
 	return h.client.PatchUserCollection(id, payload)
+}
+
+func getBangumiID(fn string) (string, error) {
+	var subject model.Bangumi
+	if err := path.ReadJSONConfigFile(fn, &subject); err != nil {
+		return "", err
+	}
+
+	return subject.BangumiID, nil
 }
