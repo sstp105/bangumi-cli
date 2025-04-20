@@ -19,7 +19,12 @@ Summary:
   bangumi unsubscribe --id 3513 取消指定番剧的订阅。
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		unsubscribehandler.Run(id)
+		h, err := unsubscribehandler.NewHandler(id)
+		if err != nil {
+
+		}
+
+		h.Run()
 	},
 }
 
