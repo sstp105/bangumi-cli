@@ -133,7 +133,7 @@ func (h *Handler) fetch() ([]model.BangumiBase, error) {
 
 	log.Infof("读取 mikan %d %s 用户订阅番剧列表...", year, s.String())
 
-	resp, err := h.mikanClient.GetMyBangumi(mikan.WithYearAndSeason(h.year, h.season))
+	resp, err := h.mikanClient.GetMyBangumi(h.year, h.season)
 	if err != nil {
 		return nil, err
 	}

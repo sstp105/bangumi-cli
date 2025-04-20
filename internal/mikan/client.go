@@ -9,7 +9,6 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/season"
 	"net/http"
 	"net/url"
-	"time"
 )
 
 const (
@@ -37,21 +36,28 @@ type ClientConfig struct {
 	IdentityCookie string
 }
 
-type ClientOption func(*clientOption)
+type ClientOption func(*Client)
 
-type clientOption struct {
-	year   int
-	season season.Season
+func WithClient(client *http.Client) ClientOption {
+	return func(c *Client) {
+		c.client = resty.NewWithClient(client)
+	}
 }
 
-func NewClient(cfg ClientConfig) (*Client, error) {
+func NewClient(cfg ClientConfig, opts ...ClientOption) (*Client, error) {
 	if err := cfg.validate(); err != nil {
 		return nil, fmt.Errorf("invalid mikan client config: %s", err)
 	}
 
-	c := resty.New()
-	c.SetBaseURL(baseURL)
-	c.SetHeaders(headers)
+	c := &Client{}
+	c.client = resty.New()
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	c.client.SetBaseURL(baseURL)
+	c.client.SetHeaders(headers)
 
 	cookies := []*http.Cookie{
 		{
@@ -59,30 +65,17 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 			Value: cfg.IdentityCookie,
 		},
 	}
-	c.SetCookies(cookies)
+	c.client.SetCookies(cookies)
 
-	return &Client{
-		client: c,
-		config: cfg,
-	}, nil
+	c.config = cfg
+
+	return c, nil
 }
 
-// GetMyBangumi fetches the user's subscribed bangumi list from Mikan.
-// By default, it returns the latest season. Use options to specify a year and season.
-func (c *Client) GetMyBangumi(opts ...ClientOption) (string, error) {
-	defaultYear := time.Now().Year()
-	defaultSeason := season.Now()
-	opt := &clientOption{
-		year:   defaultYear,
-		season: defaultSeason,
-	}
-
-	for _, o := range opts {
-		o(opt)
-	}
-
+// GetMyBangumi fetches the user's subscribed bangumi list from mikan.
+func (c *Client) GetMyBangumi(year int, season season.Season) (string, error) {
 	resp, err := c.client.R().
-		Get(libs.FormatAPIPath(myBangumiPath, opt.year, url.QueryEscape(string(opt.season))))
+		Get(libs.FormatAPIPath(myBangumiPath, year, url.QueryEscape(string(season))))
 
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch mikan my bangumi page: %w", err)
@@ -116,13 +109,6 @@ func (c *Client) LoadRSS(url string) (*RSS, error) {
 	}
 
 	return &rss, nil
-}
-
-func WithYearAndSeason(year int, season season.Season) ClientOption {
-	return func(opt *clientOption) {
-		opt.year = year
-		opt.season = season
-	}
 }
 
 func (c *ClientConfig) validate() error {

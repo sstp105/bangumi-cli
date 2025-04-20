@@ -56,23 +56,23 @@ func process(dir string) {
 }
 
 func rename(files []string, dir string) {
-	log.Debugf("处理:%s, 共 %d 个文件", dir, len(files))
+	log.Debugf("%s, 共 %d 个文件", dir, len(files))
 
 	// dry-run
 	paths, err := mediafmt.FormatFiles(files, dir, fmtter)
 	if err != nil {
-		log.Errorf("命名时出现错误, 路径: %s:%s", dir, err)
+		log.Errorf("命名出现错误:%s", err)
 		return
 	}
 
 	if proceed := prompt.Confirm("是否要继续这些命名?"); !proceed {
-		log.Info("命名已取消")
+		log.Warn("命名已取消")
 		return
 	}
 
 	for i, f := range files {
 		if err := os.Rename(f, paths[i]); err != nil {
-			log.Errorf("命名 %s -> %s 时错误: %v\n", f, paths[i], err)
+			log.Errorf("命名 %s -> %s 时错误: %v", f, paths[i], err)
 		}
 	}
 }

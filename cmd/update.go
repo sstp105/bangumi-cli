@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/sstp105/bangumi-cli/internal/config"
 	"github.com/sstp105/bangumi-cli/internal/handler/updatehandler"
 	"github.com/sstp105/bangumi-cli/internal/log"
 )
@@ -18,7 +19,7 @@ Summary:
   bangumi update 查询 Mikan 订阅的 RSS 与本地进行对比并更新。
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		h, err := updatehandler.NewHandler()
+		h, err := updatehandler.NewHandler(config.MikanClientConfig())
 		if err != nil {
 			log.Errorf("updatehandler.NewHandler err: %v", err)
 			return

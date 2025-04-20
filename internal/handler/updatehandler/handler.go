@@ -1,7 +1,8 @@
 package updatehandler
 
 import (
-	"github.com/sstp105/bangumi-cli/internal/config"
+	"errors"
+	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
 	"github.com/sstp105/bangumi-cli/internal/model"
@@ -14,13 +15,17 @@ type Handler struct {
 	subscription []model.BangumiBase
 }
 
-func NewHandler() (*Handler, error) {
+func NewHandler(cfg mikan.ClientConfig) (*Handler, error) {
 	subscription, err := path.ReadSubscriptionConfigFile()
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := mikan.NewClient(config.MikanClientConfig())
+	if subscription == nil {
+		return nil, errors.New("no subscription config found")
+	}
+
+	client, err := mikan.NewClient(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -45,41 +50,45 @@ func (h *Handler) update(bb model.BangumiBase) error {
 
 	var b model.Bangumi
 	if err := path.ReadJSONConfigFile(bb.ConfigFileName(), &b); err != nil {
-		return err
+		return fmt.Errorf("read bangumi config file error: %w", err)
 	}
 
 	log.Infof("查询 RSS 是否有新的种子...")
 	rss, err := h.mikanClient.LoadRSS(b.RSSLink)
 	if err != nil {
-		return err
+		return fmt.Errorf("load rss error: %w", err)
 	}
 
-	d, err := h.diff(*rss, b.Filters, b.Torrents)
-
-	added, err := h.promptAdd(d)
-	if err != nil {
-		return err
+	d := diff(*rss, b.Filters, b.Torrents)
+	if len(d) == 0 {
+		log.Debug("已同步 RSS, 暂无新的种子可添加")
+		return nil
 	}
 
+	log.Infof("有 %d 个新的种子可添加:", len(d))
+	added := promptAdd(d)
 	if len(added) == 0 {
+		log.Debug("更新已取消, 若之后需要添加可重新运行 update 命令")
 		return nil
 	}
 
 	b.Torrents = append(b.Torrents, added...)
+	log.Debugf("添加了 %d 个新的种子", len(added))
 
 	if err := path.SaveJSONConfigFile(b.ConfigFileName(), b); err != nil {
-		return err
+		return fmt.Errorf("save bangumi config file error: %w", err)
 	}
+	log.Debug("%s 配置文件保存成功", bb.Name)
 
-	log.Successf("%s 更新完成", bb.Name)
+	log.Successf("%s 更新完成!", bb.Name)
 
 	return nil
 }
 
-func (h *Handler) diff(rss mikan.RSS, filters model.Filters, torrents []string) (map[string]string, error) {
+func diff(rss mikan.RSS, filters model.Filters, torrents []string) map[string]string {
 	r := rss.Filter(filters)
 
-	mp := make(map[string]string) // key:hash, value:name
+	mp := make(map[string]string) // key:hash, value:bangumi name
 	for _, item := range r.Channel.Items {
 		mp[item.Enclosure.URL] = item.Title
 	}
@@ -89,18 +98,11 @@ func (h *Handler) diff(rss mikan.RSS, filters model.Filters, torrents []string) 
 			delete(mp, item)
 		}
 	}
-	return mp, nil
+
+	return mp
 }
 
-func (h *Handler) promptAdd(diff map[string]string) ([]string, error) {
-	sz := len(diff)
-
-	if sz == 0 {
-		log.Debug("已同步 RSS, 暂无新的种子可添加")
-		return nil, nil
-	}
-
-	log.Infof("有 %d 个新的种子可添加:", sz)
+func promptAdd(diff map[string]string) []string {
 	var added []string
 	for k, v := range diff {
 		log.Debug(v)
@@ -109,9 +111,8 @@ func (h *Handler) promptAdd(diff map[string]string) ([]string, error) {
 
 	proceed := prompt.Confirm("是否要添加?")
 	if !proceed {
-		log.Debug("更新已取消")
-		return nil, nil
+		return nil
 	}
 
-	return added, nil
+	return added
 }
