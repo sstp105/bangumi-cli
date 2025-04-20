@@ -130,6 +130,6 @@ func save(b model.Bangumi, added []string) error {
 		return fmt.Errorf("save bangumi config file error: %w", err)
 	}
 
-	log.Debug("%s 配置文件保存成功", b.Name)
+	log.Debugf("%s 配置文件保存成功", b.Name)
 	return nil
 }
