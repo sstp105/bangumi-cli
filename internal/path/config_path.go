@@ -94,6 +94,18 @@ func ReadSubscriptionConfigFile() ([]model.BangumiBase, error) {
 	return subscription, nil
 }
 
+func ReadBangumiConfigFile(bb model.BangumiBase) (*model.Bangumi, error) {
+	var b model.Bangumi
+	err := ReadJSONConfigFile(bb.ConfigFileName(), &b)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &b, nil
+}
+
 func ReadBangumiCredentialConfigFile() (*bangumi.OAuthCredential, error) {
 	var credential bangumi.OAuthCredential
 	err := ReadJSONConfigFile(BangumiCredentialConfigFile, &credential)
