@@ -189,7 +189,7 @@ func (h *Handler) parse(b model.BangumiBase) (*model.Bangumi, error) {
 		return nil, err
 	}
 
-	torrents, filters := filter(*rss)
+	torrents, filters := filterRSS(*rss)
 
 	return &model.Bangumi{
 		BangumiBase: b,
