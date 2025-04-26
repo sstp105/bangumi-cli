@@ -30,23 +30,36 @@ type QBittorrentClient struct {
 	config QBittorrentClientConfig
 }
 
+type Option func(*QBittorrentClient)
+
+func WithHTTPClient(client *http.Client) Option {
+	return func(c *QBittorrentClient) {
+		c.client = resty.NewWithClient(client)
+	}
+}
+
 type QBittorrentClientConfig struct {
 	Server   string
 	Username string
 	Password string
 }
 
-func NewQBittorrentClient(cfg QBittorrentClientConfig) (*QBittorrentClient, error) {
+func NewQBittorrentClient(cfg QBittorrentClientConfig, opts ...Option) (*QBittorrentClient, error) {
+	q := &QBittorrentClient{}
+
 	if err := cfg.validate(); err != nil {
 		return nil, fmt.Errorf("invalid qBittorrent client config: %w", err)
 	}
+	q.config = cfg
 
-	client := resty.New().SetBaseURL(cfg.Server)
+	client := resty.New()
+	q.client = client
 
-	q := &QBittorrentClient{
-		client: client,
-		config: cfg,
+	for _, opt := range opts {
+		opt(q)
 	}
+
+	q.client.SetBaseURL(cfg.Server)
 
 	authCookie, err := q.authenticate()
 	if err != nil {

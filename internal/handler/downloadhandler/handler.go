@@ -58,8 +58,8 @@ func (h *Handler) Run() error {
 func (h *Handler) download(bb model.BangumiBase) error {
 	log.Debugf("%s - 保存路径:%s", bb.Name, bb.SavePath())
 
-	var b model.Bangumi
-	if err := path.ReadJSONConfigFile(bb.ConfigFileName(), &b); err != nil {
+	b, err := path.ReadBangumiConfigFile(bb)
+	if err != nil {
 		return fmt.Errorf("failed to read config file %s: %w", bb.ConfigFileName(), err)
 	}
 
