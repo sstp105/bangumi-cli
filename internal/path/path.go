@@ -3,6 +3,7 @@ package path
 import "runtime"
 
 const (
+	DefaultDownloadDir = "Downloads"
 	AppDir = "bangumi-cli"
 )
 
@@ -17,6 +18,7 @@ var (
 
 type Provider interface {
 	ConfigPath() (string, error)
+	DownloadPath() (string, error)
 }
 
 type WindowsPath struct{}

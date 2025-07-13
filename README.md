@@ -4,21 +4,14 @@
 
 ## 本地运行 & 构建
 
-请先在项目根目录下创建 `.env` 文件：
-
-```sh
-cd bangumi-cli
-touch .env
-```
-
-```.env
-LOCAL_SERVER_PORT=8765
-BANGUMI_CLIENT_ID=<bangumi APP ID, 可在开发者平台获取>
-BANGUMI_CLIENT_SECRET=<bangumi APP Secret, 可在开发者平台获取>
-QBITTORRENT_SERVER=http://localhost:8080
-QBITTORRENT_USERNAME=admin
-QBITTORRENT_PASSWORD=<可在 qbittorrent web ui 中查看/更改>
-MIKAN_IDENTITY_COOKIE=<蜜柑计划 identity cookie>
+```ps1
+[Environment]::SetEnvironmentVariable("LOCAL_SERVER_PORT", "8765", "Machine")
+[Environment]::SetEnvironmentVariable("BANGUMI_CLIENT_ID", "bangumi APP ID, 可在开发者平台获取", "Machine")
+[Environment]::SetEnvironmentVariable("BANGUMI_CLIENT_SECRET", "bangumi APP Secret, 可在开发者平台获取", "Machine")
+[Environment]::SetEnvironmentVariable("QBITTORRENT_SERVER", "http://localhost:8767", "Machine")
+[Environment]::SetEnvironmentVariable("QBITTORRENT_USERNAME", "admin", "Machine")
+[Environment]::SetEnvironmentVariable("QBITTORRENT_PASSWORD", "可在 qbittorrent web ui 中查看/更改", "Machine")
+[Environment]::SetEnvironmentVariable("MIKAN_IDENTITY_COOKIE", "<蜜柑计划 identity cookie>", "Machine")
 ```
 
 根据你的系统使用对应的命令来编译：
@@ -29,6 +22,12 @@ go build -o bangumi.exe
 
 # macos
 go build -o bangumi
+```
+
+## Test
+
+```
+go test -v ./...
 ```
 
 ## 安装

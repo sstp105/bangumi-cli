@@ -2,13 +2,12 @@ package config
 
 import (
 	"fmt"
-	"github.com/sstp105/bangumi-cli/internal/log"
-	"github.com/sstp105/bangumi-cli/internal/mikan"
-	"github.com/sstp105/bangumi-cli/internal/torrent"
 	"os"
 	"strings"
 
-	"github.com/joho/godotenv"
+	"github.com/sstp105/bangumi-cli/internal/log"
+	"github.com/sstp105/bangumi-cli/internal/mikan"
+	"github.com/sstp105/bangumi-cli/internal/torrent"
 )
 
 type config struct {
@@ -22,11 +21,6 @@ type config struct {
 var cfg config
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Warnf("error loading .env file:%s", err)
-	}
-
 	cfg.port = os.Getenv(PortKey)
 	cfg.bangumiClientID = os.Getenv(BangumiClientIDKey)
 	cfg.bangumiClientSecret = os.Getenv(BangumiClientSecretKey)

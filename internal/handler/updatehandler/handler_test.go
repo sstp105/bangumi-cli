@@ -1,22 +1,30 @@
 package updatehandler
 
 import (
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/sstp105/bangumi-cli/internal/mikan"
 	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/path"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"testing"
 )
 
 type mockPathProvider struct {
 	configPathFunc func() (string, error)
+	downloadPathFunc func() (string, error)
 }
 
 func (m mockPathProvider) ConfigPath() (string, error) {
 	return m.configPathFunc()
 }
+
+
+func (m mockPathProvider) DownloadPath() (string, error) {
+	return m.downloadPathFunc()
+}
+
 
 func setMockPathProvider(t *testing.T, configDir string) {
 	t.Helper()

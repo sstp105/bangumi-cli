@@ -1,12 +1,13 @@
 package collecthandler
 
 import (
-	"github.com/go-resty/resty/v2"
-	"github.com/jarcoal/httpmock"
-	"github.com/sstp105/bangumi-cli/internal/model"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/jarcoal/httpmock"
+	"github.com/sstp105/bangumi-cli/internal/model"
 
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/path"
@@ -15,11 +16,18 @@ import (
 
 type mockPathProvider struct {
 	configPathFunc func() (string, error)
+	downloadPathFunc func() (string, error)
 }
 
 func (m mockPathProvider) ConfigPath() (string, error) {
 	return m.configPathFunc()
 }
+
+
+func (m mockPathProvider) DownloadPath() (string, error) {
+	return m.downloadPathFunc()
+}
+
 
 func newMockClient() *bangumi.Client {
 	client := resty.New()

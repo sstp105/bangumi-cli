@@ -2,11 +2,12 @@ package path
 
 import (
 	"errors"
-	"github.com/sstp105/bangumi-cli/internal/libs"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/sstp105/bangumi-cli/internal/libs"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWindowsPath_ConfigPath(t *testing.T) {
@@ -443,8 +444,14 @@ func TestReadSubscriptionConfigFile(t *testing.T) {
 
 type mockPathProvider struct {
 	configPathFunc func() (string, error)
+	downloadPathFunc func() (string, error)
 }
 
 func (m mockPathProvider) ConfigPath() (string, error) {
 	return m.configPathFunc()
+}
+
+
+func (m mockPathProvider) DownloadPath() (string, error) {
+	return m.downloadPathFunc()
 }

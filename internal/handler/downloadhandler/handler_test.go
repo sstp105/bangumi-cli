@@ -2,24 +2,31 @@ package downloadhandler
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
 	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/path"
 	"github.com/sstp105/bangumi-cli/internal/torrent"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"os"
-	"path/filepath"
-	"testing"
 )
 
 type mockPathProvider struct {
 	configPathFunc func() (string, error)
+	downloadPathFunc func() (string, error)
 }
 
 func (m mockPathProvider) ConfigPath() (string, error) {
 	return m.configPathFunc()
+}
+
+
+func (m mockPathProvider) DownloadPath() (string, error) {
+	return m.downloadPathFunc()
 }
 
 func newMockClient() (*torrent.QBittorrentClient, error) {

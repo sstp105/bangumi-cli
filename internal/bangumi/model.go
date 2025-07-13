@@ -6,11 +6,10 @@ import "fmt"
 type ErrorResponse struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	Details     string `json:"details"`
 }
 
 func (e *ErrorResponse) Error() string {
-	return fmt.Sprintf("bangumi api error: %s - %s: %s", e.Title, e.Description, e.Details)
+	return fmt.Sprintf("bangumi api error: %s - %s", e.Title, e.Description)
 }
 
 type PaginationResponse struct {
