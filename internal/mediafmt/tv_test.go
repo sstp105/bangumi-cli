@@ -30,7 +30,7 @@ func TestFormatFiles(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			fmtter := TVShowFormatter{}
 
-			got, err := fmtter.FormatFiles(tt.files, tt.dir)
+			got, err := fmtter.FormatFiles(tt.files, tt.dir, 1)
 
 			// normalize path separators to forward slashes for comparison (windows \, unix /)
 			for i, v := range got {

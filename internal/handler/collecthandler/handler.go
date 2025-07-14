@@ -3,6 +3,7 @@ package collecthandler
 import (
 	"errors"
 	"fmt"
+
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/model"

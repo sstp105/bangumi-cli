@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	cn "github.com/aiialzy/chinese-number"
+	"github.com/sstp105/bangumi-cli/internal/log"
 )
 
 type TVShowFormatter struct{}
@@ -24,17 +25,16 @@ var tvfmtter = TVShowFormatter{}
 // Returns: A slice of renamed file paths and an error (if any).
 //
 //	If renaming fails, the process will be aborted and an error will be returned.
-func (TVShowFormatter) FormatFiles(files []string, dir string) ([]string, error) {
+func (TVShowFormatter) FormatFiles(files []string, dir string, offset int) ([]string, error) {
 
 	basename := filepath.Base(dir)
 	title, season := parseFolderName(basename)
-	fmt.Printf("Parsed title:%s, season:%d from %s", title, season, basename)
+	log.Infof("Title:%s, Season:%d, Episode Offset:%d", title, season, offset)
 
 	paths := make([]string, len(files))
 
-	fmt.Println("The following files will be renamed:")
 	for i, f := range files {
-		episode := i + 1 // start episode with 1, 0 normally represents speical (特别篇).
+		episode := i + offset 
 		meta := TVShowMetadata{
 			Title:   &title,
 			Season:  &season,
