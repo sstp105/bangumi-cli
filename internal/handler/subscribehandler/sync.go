@@ -1,7 +1,6 @@
 package subscribehandler
 
 import (
-	"fmt"
 	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/model"
 	"github.com/sstp105/bangumi-cli/internal/prompt"
@@ -11,7 +10,7 @@ func (h *Handler) sync(remote []model.BangumiBase) []model.BangumiBase {
 	cs := NewChangeSet(h.subscription, remote)
 
 	if !cs.HasChanged() {
-		log.Infof("本地订阅列表与 mikan 一致，无需同步")
+		log.Infof("Local subscription list matches Mikan, no sync needed")
 		return h.subscription
 	}
 
@@ -30,12 +29,12 @@ func (h *Handler) sync(remote []model.BangumiBase) []model.BangumiBase {
 }
 
 func (h *Handler) syncSubscribe(subscribed, added []model.BangumiBase) []model.BangumiBase {
-	log.Infof("有 %d 部新的番剧在 mikan 订阅:", len(added))
+	log.Infof("There are %d new anime in the Mikan subscription:", len(added))
 	for _, item := range added {
 		log.Debug(item.Name)
 	}
 
-	proceed := prompt.Confirm(fmt.Sprint("是否要在本地订阅?"))
+	proceed := prompt.Confirm("Do you want to subscribe locally?")
 	if proceed {
 		items := h.process(added)
 		subscribed = append(subscribed, items...)
@@ -44,12 +43,13 @@ func (h *Handler) syncSubscribe(subscribed, added []model.BangumiBase) []model.B
 }
 
 func (h *Handler) syncUnsubscribe(subscribed, removed []model.BangumiBase) []model.BangumiBase {
-	log.Infof("有 %d 部番剧在 mikan 取消了订阅:", len(removed))
+	log.Infof("There are %d anime unsubscribed from Mikan:", len(removed))
+
 	for _, item := range removed {
 		log.Debug(item.Name)
 	}
 
-	proceed := prompt.Confirm(fmt.Sprint("是否也要在本地取消订阅?"))
+	proceed := prompt.Confirm("Do you also want to unsubscribe locally?")
 	if proceed {
 		unsubscribe(removed)
 	} else {

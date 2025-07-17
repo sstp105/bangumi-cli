@@ -29,54 +29,55 @@ func (h *Handler) Run() {
 	default:
 		UnsubscribeByID(h.subscription, h.id)
 	}
-	log.Info("unsubscribe 任务结束")
+	log.Info("Successfully unsubscribed all animations, task ended")
 }
 
 func UnsubscribeAll(subscriptions []model.BangumiBase) {
 	var failures []model.BangumiBase
 	for _, sub := range subscriptions {
 		if err := path.DeleteJSONConfigFile(sub.ConfigFileName()); err != nil {
-			log.Warnf("取消订阅 %s 错误: %s", sub.Name, err)
+			log.Warnf("Error unsubscribing %s: %s", sub.Name, err)
 			failures = append(failures, sub)
 			continue
 		}
-		log.Debugf("已取消订阅: %s", sub.Name)
+		log.Debugf("Unsubscribed: %s", sub.Name)
 	}
 
 	if err := path.DeleteJSONConfigFile(path.SubscriptionConfigFile); err != nil {
-		log.Errorf("删除订阅列表失败: %s", err)
+		log.Errorf("Failed to delete subscription list: %s", err)
 	}
 
 	if len(failures) != 0 {
-		log.Warnf("%d 番剧订阅未成功移除, 请重试或使用 --id 指定删除:", len(failures))
+		log.Warnf("%d anime subscriptions were not successfully removed, please retry or use --id to delete:", len(failures))
 		for _, b := range failures {
 			log.Debug(b.Name)
 		}
 		return
 	}
 
-	log.Successf("成功取消 %d 部番剧的订阅", len(subscriptions))
+	log.Successf("Successfully unsubscribed from %d anime", len(subscriptions))
 }
+
 
 func UnsubscribeByID(subscriptions []model.BangumiBase, id int) {
 	updated := filterOutByID(subscriptions, id)
 	if len(updated) == len(subscriptions) {
-		log.Errorf("未找到 ID 为 %d 的订阅", id)
+		log.Errorf("Subscription with ID %d not found", id)
 		return
 	}
 
 	if err := path.SaveJSONConfigFile(path.SubscriptionConfigFile, updated); err != nil {
-		log.Errorf("保存订阅配置失败: %s", err)
+		log.Errorf("Failed to save subscription config: %s", err)
 		return
 	}
 
 	fn := fmt.Sprintf("%d.json", id)
 	if err := path.DeleteJSONConfigFile(fn); err != nil {
-		log.Errorf("删除配置文件 %s 失败: %s", fn, err)
+		log.Errorf("Failed to delete config file %s: %s", fn, err)
 		return
 	}
 
-	log.Successf("成功取消订阅: %d", id)
+	log.Successf("Successfully unsubscribed: %d", id)
 }
 
 func filterOutByID(subscriptions []model.BangumiBase, id int) []model.BangumiBase {

@@ -2,11 +2,12 @@ package loginhandler
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+
 	"github.com/sstp105/bangumi-cli/internal/libs"
 	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/path"
-	"os"
-	"os/signal"
 
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/config"
@@ -20,7 +21,7 @@ var (
 
 func Run() {
 	if err := authenticate(); err != nil {
-		log.Errorf("获取 bangumi 凭证失败:%s", err)
+		log.Errorf("Failed to get bangumi credentials: %s", err)
 	}
 }
 

@@ -17,7 +17,8 @@ var downloadCmd = &cobra.Command{
 Summary:
   download 会加载已订阅的番剧种子任务，并将其添加到 qBitTorrent 进行下载。可选参数允许指定种子的保存目录。`,
 	Example: `
-  bangumi download           下载到当前工作目录
+  bangumi download           						下载到默认下载目录
+  bangumi download -o C:\Users\usrname\Videos\在看	 下载到指定目录
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		h, err := downloadhandler.NewHandler(output)

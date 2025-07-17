@@ -3,6 +3,7 @@ package updatehandler
 import (
 	"errors"
 	"fmt"
+
 	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/mikan"
 	"github.com/sstp105/bangumi-cli/internal/model"
@@ -39,14 +40,14 @@ func NewHandler(cfg mikan.ClientConfig) (*Handler, error) {
 func (h *Handler) Run() {
 	for _, s := range h.subscription {
 		if err := h.update(s); err != nil {
-			log.Errorf("更新 %s 出错: %v", s.Name, err)
+			log.Errorf("Error updating %s: %v", s.Name, err)
 		}
 	}
-	log.Success("本地订阅同步完成!")
+	log.Success("Local subscriptions synchronization completed!")
 }
 
 func (h *Handler) update(bb model.BangumiBase) error {
-	log.Infof("更新:%s", bb.Name)
+	log.Infof("Updating: %s", bb.Name)
 
 	b, err := path.ReadBangumiConfigFile(bb)
 	if err != nil {
@@ -60,7 +61,7 @@ func (h *Handler) update(bb model.BangumiBase) error {
 
 	d := diff(*rss, b.Filters, b.Torrents)
 	if len(d) == 0 {
-		log.Debug("已同步 RSS, 暂无新的种子可添加")
+		log.Debug("RSS is already synced, no new torrents to add")
 		return nil
 	}
 
@@ -73,17 +74,17 @@ func (h *Handler) update(bb model.BangumiBase) error {
 		return err
 	}
 
-	log.Successf("%s 更新完成!", bb.Name)
+	log.Successf("%s update completed!", bb.Name)
 
 	return nil
 }
 
 func (h *Handler) loadRSS(b model.Bangumi) (*mikan.RSS, error) {
-	log.Infof("查询 RSS 是否有新的种子...")
+	log.Infof("Checking RSS for new torrents...")
 
 	rss, err := h.mikanClient.LoadRSS(b.RSSLink)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch RSS from %s:%w", b.RSSLink, err)
+		return nil, fmt.Errorf("failed to fetch RSS from %s: %w", b.RSSLink, err)
 	}
 	return rss, nil
 }
@@ -106,7 +107,7 @@ func diff(rss mikan.RSS, filters model.Filters, torrents []string) map[string]st
 }
 
 func promptAdd(diff map[string]string) []string {
-	log.Infof("有 %d 个新的种子可添加:", len(diff))
+	log.Infof("There are %d new torrents available to add:", len(diff))
 
 	var added []string
 	for k, v := range diff {
@@ -114,7 +115,7 @@ func promptAdd(diff map[string]string) []string {
 		added = append(added, k)
 	}
 
-	proceed := prompt.Confirm("是否要添加?")
+	proceed := prompt.Confirm("Do you want to add them?")
 	if !proceed {
 		return nil
 	}
@@ -123,13 +124,13 @@ func promptAdd(diff map[string]string) []string {
 }
 
 func save(b model.Bangumi, added []string) error {
-	log.Debugf("添加了 %d 个新的种子", len(added))
+	log.Debugf("Added %d new torrents", len(added))
 	b.Torrents = append(b.Torrents, added...)
 
 	if err := path.SaveJSONConfigFile(b.ConfigFileName(), b); err != nil {
 		return fmt.Errorf("save bangumi config file error: %w", err)
 	}
 
-	log.Debugf("%s 配置文件保存成功", b.Name)
+	log.Debugf("%s config file saved successfully", b.Name)
 	return nil
 }

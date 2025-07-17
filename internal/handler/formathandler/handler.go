@@ -25,7 +25,7 @@ func Run() {
 
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Errorf("获取当前工作目录路径错误: %v", err)
+		log.Errorf("Error getting current working directory path: %v", err)
 		return
 	}
 
@@ -41,7 +41,7 @@ func loadEpisodes() {
 	}
 
 	if subscription == nil {
-		log.Error("subscription config file is empty")
+		log.Error("Subscription config file is empty")
 	}
 	
 	for _, s := range subscription {
@@ -57,7 +57,7 @@ func loadEpisodes() {
 func traverse(dir string) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		log.Errorf("读取路径 %s 时错误:%v", dir, err)
+		log.Errorf("Error reading path %s: %v", dir, err)
 		return
 	}
 
@@ -84,7 +84,7 @@ func process(dir string) {
 }
 
 func rename(files []string, dir string) {
-	log.Infof("%s, 共 %d 个文件", dir, len(files))
+	log.Infof("%s, total %d files", dir, len(files))
 
 	subject := GetFolderName(dir)
 
@@ -98,18 +98,18 @@ func rename(files []string, dir string) {
 	// dry-run
 	paths, err := mediafmt.FormatFiles(files, dir, offset, fmtter)
 	if err != nil {
-		log.Errorf("命名出现错误:%s", err)
+		log.Errorf("Renaming error occurred: %s", err)
 		return
 	}
 
-	if proceed := prompt.Confirm("是否要继续这些命名?"); !proceed {
-		log.Warn("命名已取消")
+	if proceed := prompt.Confirm("Do you want to proceed with these names?"); !proceed {
+		log.Warn("Renaming cancelled")
 		return
 	}
 
 	for i, f := range files {
 		if err := os.Rename(f, paths[i]); err != nil {
-			log.Errorf("命名 %s -> %s 时错误: %v", f, paths[i], err)
+			log.Errorf("Error renaming %s -> %s: %v", f, paths[i], err)
 		}
 	}
 }

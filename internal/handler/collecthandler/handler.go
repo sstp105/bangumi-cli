@@ -60,7 +60,7 @@ func (h *Handler) Run() error {
 
 	for _, s := range h.subscription {
 		if err := h.process(s); err != nil {
-			log.Errorf("处理[%s]时出错:%s", s.Name, err)
+			log.Errorf("Error occurred while processing [%s]: %s", s.Name, err)
 			errs = append(errs, model.ProcessError{
 				Name: s.Name,
 				Err:  err,
@@ -69,11 +69,12 @@ func (h *Handler) Run() error {
 	}
 
 	if errs != nil {
-		log.Errorf("共有 %d 个番剧处理失败: \n%s", len(errs), errs.String())
+		log.Errorf("Total of %d subjects failed to process:\n%s", len(errs), errs.String())
 		return errs
 	}
 
-	log.Successf("已成功同步 mikan 订阅的番剧到 bangumi %s, 任务完成!", h.collectionType.String())
+	log.Successf("Successfully synced Mikan subscribed subjects to Bangumi as %s, task completed!", h.collectionType.String())
+
 	return nil
 }
 
@@ -87,7 +88,7 @@ func (h *Handler) process(s model.BangumiBase) error {
 		return fmt.Errorf("failed to collect bangumi %s:%w", id, err)
 	}
 
-	log.Infof("成功收藏[%s]为[%s]", s.Name, h.collectionType.String())
+	log.Infof("Successfully collected [%s] as [%s]", s.Name, h.collectionType.String())
 
 	return nil
 }
@@ -104,11 +105,12 @@ func (h *Handler) collect(id string) error {
 
 	// if user has not collected before, create the collection
 	if collection == nil {
-		log.Debugf("用户 %s 尚未收藏番剧 %s，正在创建收藏...", h.username, id)
+		log.Debugf("User %s has not collected the subject %s yet, adding collection...", h.username, id)
 		return h.client.PostUserCollection(id, payload)
 	}
 
-	log.Debugf("用户 %s 已收藏番剧 %s，正在更新收藏状态为 %s...", h.username, id, h.collectionType)
+	log.Debugf("%s has already collected the subject %s, updating collection status to %s...", h.username, id, h.collectionType)
+
 	return h.client.PatchUserCollection(id, payload)
 }
 

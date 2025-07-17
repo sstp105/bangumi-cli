@@ -36,7 +36,7 @@ func NewHandler(output string) (*Handler, error) {
 
 func (h *Handler) Run() error {
 	if h.subscription == nil {
-		log.Warn("本地暂无任何订阅，任务结束。")
+		log.Warn("No local subscriptions found. Task ended.")
 		return nil
 	}
 
@@ -44,17 +44,18 @@ func (h *Handler) Run() error {
 
 	for _, s := range h.subscription {
 		if err := h.download(s, h.output); err != nil {
-			log.Errorf("%s 添加任务失败: %s", s.Name, err)
+			log.Errorf("Failed to add task for %s: %s", s.Name, err)
 			errs = append(errs, model.ProcessError{Name: s.Name, Err: err})
 		}
 	}
 
 	if len(errs) != 0 {
-		log.Errorf("共有 %d 个任务处理失败: \n%s", len(errs), errs.String())
+		log.Errorf("A total of %d tasks failed to process:\n%s", len(errs), errs.String())
 		return errs
 	}
 
-	log.Successf("任务已全部添加至 %s, 任务完成！", h.client.Name())
+	log.Successf("All tasks have been added to %s, task completed!", h.client.Name())
+
 	return nil
 }
 
@@ -65,12 +66,13 @@ func (h *Handler) download(bb model.BangumiBase, output string) error {
 	}
 
 	dest := output + `\` + bb.Name
-	log.Debugf("%s - 保存路径:%s", bb.Name, dest)
+	log.Debugf("%s - Save path: %s", bb.Name, dest)
 	
 	if err := h.client.Add(b.TorrentURLs(), dest); err != nil {
 		return fmt.Errorf("failed to add torrent urls: %w", err)
 	}
+	
+	log.Successf("%d tasks have been successfully added to %s!", len(b.Torrents), h.client.Name())
 
-	log.Successf("%d 个任务已成功添加到 %s!", len(b.Torrents), h.client.Name())
 	return nil
 }

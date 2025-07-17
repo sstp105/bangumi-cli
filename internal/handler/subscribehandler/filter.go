@@ -9,20 +9,20 @@ import (
 )
 
 func filterRSS(rss mikan.RSS) ([]string, *model.Filters) {
-	log.Infof("当前订阅的RSS包含以下结果: \n%s", rss.String())
+	log.Infof("The current subscribed RSS contains the following results:\n%s", rss.String())
 
 	filters := promptFilters()
-	log.Infof("根据关键词 %v 筛选结果...", filters)
+	log.Infof("Filtering results based on keywords %v...", filters)
 
 	rss = rss.Filter(filters)
-	log.Infof("筛选后的结果如下:\n%s", rss.String())
+	log.Infof("The filtered results are as follows:\n%s", rss.String())
 
 	return rss.TorrentURLs(), &filters
 }
 
 func promptFilters() model.Filters {
 	var input string
-	input = prompt.ReadUserInput("请输入想要包含的关键词，多个请以英文逗号(,)隔开, 完成后请按回车")
+	input = prompt.ReadUserInput("Please enter keywords to include, separated by commas (,). Press Enter when done.")
 	include := libs.SplitToSlice(input, ",")
 
 	return model.Filters{

@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 	"github.com/sstp105/bangumi-cli/internal/handler/subscribehandler"
 	"github.com/sstp105/bangumi-cli/internal/log"
 	"github.com/sstp105/bangumi-cli/internal/season"
-	"time"
 )
 
 var year int

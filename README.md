@@ -1,27 +1,27 @@
 # bangumi-cli
 
-一套管理季度动画收藏和媒体流相关任务的 CLI 工具。
+A set of CLI tools for bangumi.tv and plex media streaming related tasks.
 
-## 本地运行 & 构建
+## Build & Install
+
+### Windows
+
+Setup environment variables:
 
 ```ps1
 [Environment]::SetEnvironmentVariable("LOCAL_SERVER_PORT", "8765", "Machine")
-[Environment]::SetEnvironmentVariable("BANGUMI_CLIENT_ID", "bangumi APP ID, 可在开发者平台获取", "Machine")
-[Environment]::SetEnvironmentVariable("BANGUMI_CLIENT_SECRET", "bangumi APP Secret, 可在开发者平台获取", "Machine")
+[Environment]::SetEnvironmentVariable("BANGUMI_CLIENT_ID", "bangumi APP ID", "Machine")
+[Environment]::SetEnvironmentVariable("BANGUMI_CLIENT_SECRET", "bangumi APP Secret", "Machine")
 [Environment]::SetEnvironmentVariable("QBITTORRENT_SERVER", "http://localhost:8767", "Machine")
 [Environment]::SetEnvironmentVariable("QBITTORRENT_USERNAME", "admin", "Machine")
-[Environment]::SetEnvironmentVariable("QBITTORRENT_PASSWORD", "可在 qbittorrent web ui 中查看/更改", "Machine")
-[Environment]::SetEnvironmentVariable("MIKAN_IDENTITY_COOKIE", "<蜜柑计划 identity cookie>", "Machine")
+[Environment]::SetEnvironmentVariable("QBITTORRENT_PASSWORD", "", "Machine")
+[Environment]::SetEnvironmentVariable("MIKAN_IDENTITY_COOKIE", "", "Machine")
 ```
 
-根据你的系统使用对应的命令来编译：
+Run the following command to build the binary file:
 
 ```sh
-# windows
 go build -o bangumi.exe
-
-# macos
-go build -o bangumi
 ```
 
 ## Test
@@ -30,37 +30,27 @@ go build -o bangumi
 go test -v ./...
 ```
 
-## 安装
+## Usage
 
 ```sh
-# windows
-mv .\bangumi.exe C:\Users\<usrname>\go\bin -Force
-
-# macos
-mv bangumi /usr/local/bin
-```
-
-## 使用
-
-```sh
-# 登录 bangumi.tv 并获取 API 访问令牌（access_token）
+# Log in to bangumi.tv and obtain an API access token
 bangumi login
 
-# 订阅 Mikan 最新季度动画（解析、生成元数据、预下载准备）
+# Subscribe to the specified season from Mikan (parse, generate metadata, prepare for pre-download)
 bangumi subscribe
 
-# 查询 Mikan 订阅的 RSS 是否有新的种子
+# Check if there are new torrents in the subscribed Mikan RSS feeds
 bangumi update
 
-# 批量处理 RSS，并将下载任务发送到 qBitTorrent 队列
+# Batch process RSS and send download tasks to the client queue
 bangumi download
 
-# 递归格式化文件，使其符合 Plex / Jellyfin / Emby 媒体流格式
+# Recursively format files to comply with Plex / Jellyfin / Emby media library standards
 bangumi format
 
-# 收集已整理的动画数据 (批量收藏bangumi.tv条目、 同步mikan订阅列表)
+# Collect organized anime data (batch add entries to bangumi.tv collection, sync Mikan subscription list)
 bangumi collect
 
-# 取消订阅动画
+# Unsubscribe from Mikan
 bangumi unsubscribe
 ```

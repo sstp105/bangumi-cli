@@ -2,6 +2,7 @@ package subscribehandler
 
 import (
 	"fmt"
+
 	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"github.com/sstp105/bangumi-cli/internal/config"
 	"github.com/sstp105/bangumi-cli/internal/libs"
@@ -55,7 +56,7 @@ func NewHandler(year, seasonID int) (*Handler, error) {
 func (h *Handler) Run() {
 	remote, err := h.fetch() // user's bangumi subscription on mikan (latest)
 	if err != nil {
-		log.Errorf("读取用户 mikan 订阅的番剧列表(year=%d,seasonID=%d)错误:%s", h.year, h.seasonID, err)
+		log.Errorf("Error reading user's Mikan subscribed anime list (year=%d, seasonID=%d): %s", h.year, h.seasonID, err)
 		return
 	}
 
@@ -66,20 +67,20 @@ func (h *Handler) Run() {
 	}
 
 	if err := h.save(); err != nil {
-		log.Errorf("保存番剧订阅配置文件错误:%s, 请重试", err)
+		log.Errorf("Error saving anime subscription config file: %s, please try again", err)
 		return
 	}
 
-	log.Success("本地订阅已和 mikan 订阅同步!")
+	log.Success("Local subscriptions have been synced with Mikan subscriptions!")
 }
 
 func (h *Handler) add(subscription []model.BangumiBase) {
-	log.Infof("本地暂无番剧订阅, 准备订阅 mikan %d %d 订阅列表", h.year, h.seasonID)
+	log.Infof("No local anime subscriptions found, preparing to subscribe to Mikan %d %d subscription list", h.year, h.seasonID)
 	h.subscription = h.process(subscription)
 }
 
 func (h *Handler) update(subscription []model.BangumiBase) {
-	log.Infof("本地已有订阅, 准备同步 mikan %d %d 订阅列表", h.year, h.seasonID)
+	log.Infof("Local subscriptions already exist, preparing to sync Mikan %d %d subscription list", h.year, h.seasonID)
 	h.subscription = h.sync(subscription)
 }
 
@@ -89,14 +90,14 @@ func (h *Handler) process(data []model.BangumiBase) []model.BangumiBase {
 	for _, item := range data {
 		proceed, err := h.subscribe(item)
 		if err != nil {
-			log.Error("%s 订阅错误:%s", item.Name, err)
+			log.Error("%s subscription error: %s", item.Name, err)
 			continue
 		}
 		if !proceed {
-			log.Warnf("已取消保存该订阅。如需订阅，之后可重新运行 subscribe 命令。")
+			log.Warnf("Saving this subscription has been canceled. If you want to subscribe, you can run the subscribe command again later.")
 			continue
 		}
-		log.Successf("%s 订阅成功!", item.Name)
+		log.Successf("%s subscription successful!", item.Name)
 		subscribed = append(subscribed, item)
 	}
 	return subscribed
@@ -122,7 +123,7 @@ func (h *Handler) subscribe(bb model.BangumiBase) (bool, error) {
 func unsubscribe(items []model.BangumiBase) {
 	for _, item := range items {
 		if err := path.DeleteJSONConfigFile(item.ConfigFileName()); err != nil {
-			log.Errorf("取消订阅:%s 错误:%s", item.Name, err)
+			log.Errorf("Unsubscribe error for %s: %s", item.Name, err)
 		}
 	}
 }
@@ -131,7 +132,7 @@ func (h *Handler) fetch() ([]model.BangumiBase, error) {
 	year := h.year
 	s := h.season
 
-	log.Infof("读取 mikan %d %s 用户订阅番剧列表...", year, s.String())
+	log.Infof("Reading Mikan %d %s user's subscribed anime list...", year, s.String())
 
 	resp, err := h.mikanClient.GetMyBangumi(h.year, h.season)
 	if err != nil {
@@ -148,7 +149,8 @@ func (h *Handler) fetch() ([]model.BangumiBase, error) {
 		return nil, err
 	}
 
-	log.Success("成功解析用户订阅的番剧列表:")
+	log.Success("Successfully parsed the user's subscribed anime list:")
+
 	for _, item := range list {
 		log.Debug(item.Name)
 	}
@@ -157,7 +159,7 @@ func (h *Handler) fetch() ([]model.BangumiBase, error) {
 }
 
 func (h *Handler) parse(b model.BangumiBase) (*model.Bangumi, error) {
-	log.Infof("开始解析番剧:%s, id:%s", b.Name, b.ID)
+	log.Infof("Starting to parse anime: %s, id: %s", b.Name, b.ID)
 
 	resp, err := h.mikanClient.GetBangumi(b.ID)
 	if err != nil {
@@ -202,7 +204,7 @@ func (h *Handler) parse(b model.BangumiBase) (*model.Bangumi, error) {
 }
 
 func confirm() bool {
-	return prompt.Confirm("是否要保存该订阅?")
+	return prompt.Confirm("Do you want to save this subscription?")
 }
 
 func (h *Handler) save() error {
