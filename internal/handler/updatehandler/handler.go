@@ -47,12 +47,12 @@ func (h *Handler) Run() {
 }
 
 func (h *Handler) update(bb model.BangumiBase) error {
-	log.Infof("Updating: %s", bb.Name)
-
 	b, err := path.ReadBangumiConfigFile(bb)
 	if err != nil {
 		return err
 	}
+
+	log.Infof("Updating: %s, Total Episode: %d", bb.Name, len(b.Episodes))
 
 	rss, err := h.loadRSS(*b)
 	if err != nil {
@@ -80,7 +80,7 @@ func (h *Handler) update(bb model.BangumiBase) error {
 }
 
 func (h *Handler) loadRSS(b model.Bangumi) (*mikan.RSS, error) {
-	log.Infof("Checking RSS for new torrents...")
+	log.Debugf("Checking RSS for new torrents...")
 
 	rss, err := h.mikanClient.LoadRSS(b.RSSLink)
 	if err != nil {
