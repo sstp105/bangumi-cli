@@ -2,26 +2,39 @@
 
 A set of CLI tools for bangumi.tv and plex media streaming related tasks.
 
-## Build & Install
+## Environment Setup
 
-### Windows
+|                         | Description                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `LOCAL_SERVER_PORT`     | The local server port number for the application and is used for listening for bangumi API callback.         |
+| `BANGUMI_CLIENT_ID`     | Bangumi app's Client ID used. https://bangumi.tv/dev/app                                                     |
+| `BANGUMI_CLIENT_SECRET` | Bangumi app's Client Secret. https://bangumi.tv/dev/app                                                      |
+| `QBITTORRENT_SERVER`    | qBittorrent Web UI server, can be configured in qBittorrent client settings (e.g., `http://localhost:8767`). |
+| `QBITTORRENT_USERNAME`  | Username for logging into the qBittorrent Web UI (default is `admin`).                                       |
+| `QBITTORRENT_PASSWORD`  | Password for the qBittorrent Web UI, can be configured in qBittorrent client settings.                       |
+| `MIKAN_IDENTITY_COOKIE` | Mikan identity cookie `.AspNetCore.Identity.Application`                                                     |
 
-Setup environment variables:
-
-```ps1
-[Environment]::SetEnvironmentVariable("LOCAL_SERVER_PORT", "8765", "Machine")
-[Environment]::SetEnvironmentVariable("BANGUMI_CLIENT_ID", "bangumi APP ID", "Machine")
-[Environment]::SetEnvironmentVariable("BANGUMI_CLIENT_SECRET", "bangumi APP Secret", "Machine")
-[Environment]::SetEnvironmentVariable("QBITTORRENT_SERVER", "http://localhost:8767", "Machine")
-[Environment]::SetEnvironmentVariable("QBITTORRENT_USERNAME", "admin", "Machine")
-[Environment]::SetEnvironmentVariable("QBITTORRENT_PASSWORD", "", "Machine")
-[Environment]::SetEnvironmentVariable("MIKAN_IDENTITY_COOKIE", "", "Machine")
-```
-
-Run the following command to build the binary file:
+To setup environment variables:
 
 ```sh
+# Windows: Open powershell as administrator then run the following commands under `bangumi-cli` directory
+cd scripts
+.\setup.ps1
+
+# MacOS: Run the following commands under bangumi-cli directory
+chmod +x setup.sh
+./setup.sh
+source ~/.zshrc
+```
+
+## Build
+
+```sh
+# Windows
 go build -o bangumi.exe
+
+# MacOS
+go build -o bangumi
 ```
 
 ## Test
@@ -33,24 +46,17 @@ go test -v ./...
 ## Usage
 
 ```sh
-# Log in to bangumi.tv and obtain an API access token
-bangumi login
+bangumi login -h
 
-# Subscribe to the specified season from Mikan (parse, generate metadata, prepare for pre-download)
-bangumi subscribe
+bangumi subscribe -h
 
-# Check if there are new torrents in the subscribed Mikan RSS feeds
-bangumi update
+bangumi update -h
 
-# Batch process RSS and send download tasks to the client queue
-bangumi download
+bangumi download -h
 
-# Recursively format files to comply with Plex / Jellyfin / Emby media library standards
-bangumi format
+bangumi format -h
 
-# Collect organized anime data (batch add entries to bangumi.tv collection, sync Mikan subscription list)
-bangumi collect
+bangumi collect -h
 
-# Unsubscribe from Mikan
-bangumi unsubscribe
+bangumi unsubscribe -h
 ```
