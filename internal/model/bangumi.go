@@ -2,8 +2,9 @@ package model
 
 import (
 	"fmt"
-	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"strings"
+
+	"github.com/sstp105/bangumi-cli/internal/bangumi"
 )
 
 type BangumiBase struct {
@@ -39,13 +40,18 @@ type Bangumi struct {
 	RSSLink string `json:"rss_link"`
 
 	// Torrents holds a list of torrent urls that can be downloaded.
-	Torrents []string `json:"torrents"`
+	Torrents []Torrent `json:"torrents"`
 
 	// Filters holds user configured torrent filters.
 	Filters Filters `json:"filters"`
 
 	// Episodes holds a list of episodes for the bangumi.
 	Episodes []bangumi.Episode `json:"episodes"`
+}
+
+type Torrent struct {
+	Link string `json:"link"`
+	Title string `json:"title"`
 }
 
 func (b Bangumi) StartEpisode() int {
@@ -58,7 +64,7 @@ func (b Bangumi) StartEpisode() int {
 func (b Bangumi) TorrentURLs() string {
 	var builder strings.Builder
 	for _, t := range b.Torrents {
-		builder.WriteString(t + "\n")
+		builder.WriteString(t.Link + "\n")
 	}
 	return builder.String()
 }

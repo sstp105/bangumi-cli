@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"github.com/sstp105/bangumi-cli/internal/model"
 	"strings"
+
+	"github.com/sstp105/bangumi-cli/internal/model"
 )
 
 type RSS struct {
@@ -44,6 +45,17 @@ func (r RSS) String() string {
 		buf.WriteString(fmt.Sprintf("%s\n", item.Title))
 	}
 	return buf.String()
+}
+
+func (r RSS) Torrents() []model.Torrent {
+	var torrents []model.Torrent
+	for _, item := range r.Channel.Items {
+		torrents = append(torrents, model.Torrent{
+			Link: item.Enclosure.URL,
+			Title: item.Title,
+		})
+	}
+	return torrents
 }
 
 func (r RSS) TorrentURLs() []string {

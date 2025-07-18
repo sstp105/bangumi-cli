@@ -52,7 +52,10 @@ func (h *Handler) update(bb model.BangumiBase) error {
 		return err
 	}
 
-	log.Infof("Updating: %s, Total Episode: %d", bb.Name, len(b.Episodes))
+	log.Infof("Updating: %s, total episode: %d, added torrents:", bb.Name, len(b.Episodes))
+	for _, v := range b.Torrents {
+		log.Debug(v.Title)
+	}
 
 	rss, err := h.loadRSS(*b)
 	if err != nil {
@@ -89,7 +92,7 @@ func (h *Handler) loadRSS(b model.Bangumi) (*mikan.RSS, error) {
 	return rss, nil
 }
 
-func diff(rss mikan.RSS, filters model.Filters, torrents []string) map[string]string {
+func diff(rss mikan.RSS, filters model.Filters, torrents []model.Torrent) map[string]string {
 	r := rss.Filter(filters)
 
 	mp := make(map[string]string) // key:hash, value:bangumi name
@@ -98,21 +101,24 @@ func diff(rss mikan.RSS, filters model.Filters, torrents []string) map[string]st
 	}
 
 	for _, item := range torrents {
-		if _, ok := mp[item]; ok {
-			delete(mp, item)
+		if _, ok := mp[item.Link]; ok {
+			delete(mp, item.Link)
 		}
 	}
 
 	return mp
 }
 
-func promptAdd(diff map[string]string) []string {
+func promptAdd(diff map[string]string) []model.Torrent {
 	log.Infof("There are %d new torrents available to add:", len(diff))
 
-	var added []string
+	var added []model.Torrent
 	for k, v := range diff {
 		log.Debug(v)
-		added = append(added, k)
+		added = append(added, model.Torrent{
+			Link: k,
+			Title: v,
+		})
 	}
 
 	proceed := prompt.Confirm("Do you want to add them?")
@@ -123,7 +129,7 @@ func promptAdd(diff map[string]string) []string {
 	return added
 }
 
-func save(b model.Bangumi, added []string) error {
+func save(b model.Bangumi, added []model.Torrent) error {
 	log.Debugf("Added %d new torrents", len(added))
 	b.Torrents = append(b.Torrents, added...)
 

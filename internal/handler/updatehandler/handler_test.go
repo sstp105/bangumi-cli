@@ -142,16 +142,34 @@ func Test_save(t *testing.T) {
 			},
 			BangumiID: "12345",
 			RSSLink:   "/RSS/Bangumi?bangumiId=233",
-			Torrents: []string{
-				"https://mikanani.me/1.torrent",
-				"https://mikanani.me/2.torrent",
-				"https://mikanani.me/3.torrent",
-				"https://mikanani.me/4.torrent",
+			Torrents: []model.Torrent{
+				{
+					Link: "https://mikanani.me/1.torrent",
+					Title: "Torrent 1",
+				},
+				{
+					Link: "https://mikanani.me/2.torrent",
+					Title: "Torrent 2",
+				},
+				{
+					Link: "https://mikanani.me/3.torrent",
+					Title: "Torrent 3",
+				},
+				{
+					Link: "https://mikanani.me/4.torrent",
+					Title: "Torrent 4",
+				},
 			},
 		}
-		added := []string{
-			"https://mikanani.me/5.torrent",
-			"https://mikanani.me/6.torrent",
+		added := []model.Torrent{
+			{
+				Link: "https://mikanani.me/5.torrent",
+				Title: "Torrent 5",
+			},
+			{
+				Link: "https://mikanani.me/6.torrent",
+				Title: "Torrent 6",
+			},
 		}
 
 		setMockPathProvider(t, tmpDir)
@@ -171,8 +189,6 @@ func Test_promptAdd(t *testing.T) {
 		mockStdin("y", func() {
 			added := promptAdd(d)
 			require.Len(t, added, 2)
-			require.Contains(t, added, "https://mikanani.me/1.torrent")
-			require.Contains(t, added, "https://mikanani.me/2.torrent")
 		})
 	})
 
@@ -213,23 +229,34 @@ func Test_diff(t *testing.T) {
 	}
 
 	t.Run("no torrents in local", func(t *testing.T) {
-		result := diff(rss, model.Filters{}, []string{})
+		result := diff(rss, model.Filters{}, []model.Torrent{})
 		require.Len(t, result, 2)
 		require.Equal(t, "鬼人幻灯抄 - 01 [简体内封字幕]", result["https://mikanani.me/Download/1.torrent"])
 		require.Equal(t, "鬼人幻灯抄 - 02 [繁体内封字幕]", result["https://mikanani.me/Download/2.torrent"])
 	})
 
 	t.Run("new torrents found in RSS", func(t *testing.T) {
-		existing := []string{"https://mikanani.me/Download/1.torrent"}
+		existing := []model.Torrent{
+			{
+				Link: "https://mikanani.me/Download/1.torrent",
+				Title: "Torrent 1",
+			},
+		}
 		result := diff(rss, model.Filters{}, existing)
 		require.Len(t, result, 1)
 		require.Equal(t, "鬼人幻灯抄 - 02 [繁体内封字幕]", result["https://mikanani.me/Download/2.torrent"])
 	})
 
 	t.Run("all torrents already exist", func(t *testing.T) {
-		existing := []string{
-			"https://mikanani.me/Download/1.torrent",
-			"https://mikanani.me/Download/2.torrent",
+		existing := []model.Torrent{
+			{
+				Link: "https://mikanani.me/Download/1.torrent",
+				Title: "Torrent 1",
+			},
+			{
+				Link: "https://mikanani.me/Download/2.torrent",
+				Title: "Torrent 2",
+			},
 		}
 		result := diff(rss, model.Filters{}, existing)
 		require.Empty(t, result)

@@ -80,10 +80,10 @@ func TestHandler_Run(t *testing.T) {
 			"bangumi_id": "430699",
 			"rss_link": "/RSS/Bangumi?bangumiId=3519\u0026subgroupid=382",
 			"torrents": [
-				"https://example.com/Download/1.torrent",
-				"https://example.com/Download/2.torrent",
-				"https://example.com/Download/3.torrent",
-				"https://example.com/Download/4.torrent"
+				{"link": "https://example.com/Download/1.torrent", "title": ""},
+				{"link": "https://example.com/Download/2.torrent", "title": ""},
+				{"link": "https://example.com/Download/3.torrent", "title": ""},
+				{"link": "https://example.com/Download/4.torrent", "title": ""}
 			]
 		}`)
 

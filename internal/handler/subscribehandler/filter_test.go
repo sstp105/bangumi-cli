@@ -1,10 +1,12 @@
 package subscribehandler
 
 import (
-	"github.com/sstp105/bangumi-cli/internal/mikan"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/sstp105/bangumi-cli/internal/mikan"
+	"github.com/sstp105/bangumi-cli/internal/model"
+	"github.com/stretchr/testify/require"
 )
 
 var rss = mikan.RSS{
@@ -46,9 +48,9 @@ func TestPromptFilters(t *testing.T) {
 func TestFilterRSS(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		mockStdin("简体", func() {
-			torrentURLs, filters := filterRSS(rss)
+			torrents, filters := filterRSS(rss)
 
-			require.Equal(t, []string{"https://mikanani.me/Download/1.torrent"}, torrentURLs)
+			require.Equal(t,  []model.Torrent([]model.Torrent{{Link:"https://mikanani.me/Download/1.torrent", Title:"鬼人幻灯抄 - 01 [简体内封字幕]"}}), torrents)
 			require.Equal(t, filters.Include, []string{"简体"})
 		})
 	})

@@ -8,7 +8,7 @@ import (
 	"github.com/sstp105/bangumi-cli/internal/prompt"
 )
 
-func filterRSS(rss mikan.RSS) ([]string, *model.Filters) {
+func filterRSS(rss mikan.RSS) ([]model.Torrent, *model.Filters) {
 	log.Infof("The current subscribed RSS contains the following results:\n%s", rss.String())
 
 	filters := promptFilters()
@@ -17,7 +17,7 @@ func filterRSS(rss mikan.RSS) ([]string, *model.Filters) {
 	rss = rss.Filter(filters)
 	log.Infof("The filtered results are as follows:\n%s", rss.String())
 
-	return rss.TorrentURLs(), &filters
+	return rss.Torrents(), &filters
 }
 
 func promptFilters() model.Filters {

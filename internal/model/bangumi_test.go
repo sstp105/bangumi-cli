@@ -1,13 +1,17 @@
 package model
 
 import (
-	"github.com/sstp105/bangumi-cli/internal/bangumi"
 	"testing"
+
+	"github.com/sstp105/bangumi-cli/internal/bangumi"
 )
 
 func TestBangumi_TorrentURLs(t *testing.T) {
 	b := Bangumi{
-		Torrents: []string{"torrent1", "torrent2"},
+		Torrents: []Torrent{
+			{Link: "torrent1", Title: "Torrent 1"},
+			{Link: "torrent2", Title: "Torrent 2"},
+		},
 	}
 
 	got := b.TorrentURLs()
